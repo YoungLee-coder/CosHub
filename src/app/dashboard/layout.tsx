@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
-import { 
-  Home, 
-  Settings, 
+import {
+  Home,
+  Settings,
   LogOut,
   FolderOpen
 } from 'lucide-react'
@@ -32,14 +32,14 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname()
   const router = useRouter()
-  
+
   const handleLogout = async () => {
     try {
       // 使用相对路径退出登录
-      await signOut({ 
-        redirect: false 
+      await signOut({
+        redirect: false
       })
-      
+
       // 使用 router.push 确保在同一域名下跳转
       router.push('/login')
     } catch (error) {
@@ -48,7 +48,7 @@ export default function DashboardLayout({
       router.push('/login')
     }
   }
-  
+
   return (
     <div className="min-h-screen flex">
       {/* 侧边栏 */}
@@ -58,7 +58,7 @@ export default function DashboardLayout({
             <FolderOpen className="h-6 w-6" />
             <h1 className="text-xl font-bold">CosHub</h1>
           </div>
-          
+
           <nav className="space-y-2">
             {navItems.map((item) => (
               <Link
@@ -75,21 +75,20 @@ export default function DashboardLayout({
                 {item.title}
               </Link>
             ))}
+
+            {/* 退出登录按钮 */}
+            <Button
+              variant="outline"
+              className="w-full justify-start mt-4"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              退出登录
+            </Button>
           </nav>
         </div>
-        
-        <div className="p-6">
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            退出登录
-          </Button>
-        </div>
       </div>
-      
+
       {/* 主内容区 */}
       <div className="flex-1 overflow-hidden">
         {children}

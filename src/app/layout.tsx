@@ -10,8 +10,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CosHub - 腾讯云COS可视化管理面板",
+  title: "CosHub",
   description: "一个简洁高效的腾讯云COS对象存储管理面板",
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

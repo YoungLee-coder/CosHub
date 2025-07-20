@@ -114,8 +114,8 @@ export function FileManager({ bucketId, prefix = '' }: FileManagerProps) {
   
   // 分页相关状态
   const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(false)
-  const [markers, setMarkers] = useState<string[]>(['']) // 存储每页的marker，第一页为空字符串
+  const [pageMarkers, setPageMarkers] = useState<Record<number, string>>({ 1: '' }) // 存储每页的marker
+  const [hasNextPage, setHasNextPage] = useState(false)
   
   const { toast } = useToast()
   const queryClient = useQueryClient()
@@ -143,16 +143,16 @@ export function FileManager({ bucketId, prefix = '' }: FileManagerProps) {
   // 重置分页状态
   useEffect(() => {
     setPage(1)
-    setHasMore(false)
-    setMarkers([''])
-  }, [bucketId, currentPath, pageSize, sortField, sortOrder])
+    setPageMarkers({ 1: '' })
+    // 不要立即设置 hasNextPage 为 false，让查询函数来决定
+  }, [bucketId, currentPath, pageSize, sortField, sortOrder, viewMode])
   
   // 获取文件列表
   const { data: allData = { files: [], folders: [], nextMarker: null, isTruncated: false, total: 0 }, isLoading, isFetching } = useQuery({
-    queryKey: ['files', bucketId, currentPath, markers[page - 1], pageSize, sortField, sortOrder, page],
-    queryFn: async ({ queryKey }) => {
-      const currentPage = queryKey[7] as number
-      const marker = markers[currentPage - 1] || ''
+    queryKey: ['files', bucketId, currentPath, page, pageSize, sortField, sortOrder, viewMode],
+    queryFn: async () => {
+      // 使用当前页对应的marker
+      const marker = pageMarkers[page] || ''
       const res = await fetch(`/api/files?bucketId=${bucketId}&prefix=${currentPath}&marker=${marker}&maxKeys=${pageSize}&sortField=${sortField}&sortOrder=${sortOrder}`)
       if (!res.ok) throw new Error('Failed to fetch files')
       const data = await res.json()
@@ -175,27 +175,103 @@ export function FileManager({ bucketId, prefix = '' }: FileManagerProps) {
         }
       })
       
-      // 更新分页状态
-      // 如果当前页不是最后一页（currentPage < markers.length），说明还有下一页
-      const hasMoreData = (data.isTruncated || false) || (currentPage < markers.length)
-      setHasMore(hasMoreData)
-      
-      // 如果有下一页，预先存储下一页的marker
-      if (data.nextMarker && currentPage === markers.length) {
-        setMarkers(prev => [...prev, data.nextMarker])
-      }
-      
       return { files, folders, nextMarker: data.nextMarker, isTruncated: data.isTruncated, total: data.total || 0 }
     },
     // 缓存优化
     staleTime: 5 * 60 * 1000, // 5分钟内数据视为新鲜
     gcTime: 10 * 60 * 1000, // 10分钟后垃圾回收
     refetchOnWindowFocus: false, // 窗口获得焦点时不重新获取
-    placeholderData: (previousData) => previousData, // 保留之前的数据直到新数据加载完成
+    // 移除 placeholderData，确保视图切换时能正确显示加载状态
   })
   
   const { files: allFiles, folders: allFolders } = allData
   const totalFileCount = allData.total || 0
+  
+  // 更新分页状态
+  useEffect(() => {
+    if (allData && !isLoading) {
+      const hasNext = allData.isTruncated || false
+      setHasNextPage(hasNext)
+      
+      // 如果有下一页且下一页的marker还没有存储，则存储它
+      if (hasNext && allData.nextMarker && !pageMarkers[page + 1]) {
+        setPageMarkers(prev => ({
+          ...prev,
+          [page + 1]: allData.nextMarker
+        }))
+      }
+    }
+  }, [allData, isLoading, page, pageMarkers])
+  
+  // 预加载优化
+  useEffect(() => {
+    if (!isFetching && allData) {
+      // 1. 预加载下一页数据
+      if (hasNextPage && allData.nextMarker) {
+        const nextPageKey = ['files', bucketId, currentPath, page + 1, pageSize, sortField, sortOrder, viewMode]
+        const cachedNextPage = queryClient.getQueryData(nextPageKey)
+        
+        if (!cachedNextPage) {
+          queryClient.prefetchQuery({
+            queryKey: nextPageKey,
+            queryFn: async () => {
+              const marker = allData.nextMarker || ''
+              const res = await fetch(`/api/files?bucketId=${bucketId}&prefix=${currentPath}&marker=${marker}&maxKeys=${pageSize}&sortField=${sortField}&sortOrder=${sortOrder}`)
+              if (!res.ok) throw new Error('Failed to fetch files')
+              const data = await res.json()
+              
+              const files: FileWithUrl[] = []
+              const folders: FolderItem[] = []
+              
+              const responseData = data.files || []
+              responseData.forEach((item: ExtendedFileWithUrl) => {
+                if (item.isFolder || item.type === 'folder') {
+                  folders.push({ name: item.name, path: item.key })
+                } else {
+                  files.push(item)
+                }
+              })
+              
+              return { files, folders, nextMarker: data.nextMarker, isTruncated: data.isTruncated, total: data.total || 0 }
+            },
+            staleTime: 5 * 60 * 1000,
+          })
+        }
+      }
+      
+      // 2. 预加载另一个视图模式的数据（当前页）
+      const otherViewMode = viewMode === 'list' ? 'grid' : 'list'
+      const otherViewPageSize = otherViewMode === 'grid' ? 24 : 50
+      const otherViewKey = ['files', bucketId, currentPath, 1, otherViewPageSize, sortField, sortOrder, otherViewMode] // 预加载第1页
+      const cachedOtherView = queryClient.getQueryData(otherViewKey)
+      
+      if (!cachedOtherView) {
+        queryClient.prefetchQuery({
+          queryKey: otherViewKey,
+          queryFn: async () => {
+            const res = await fetch(`/api/files?bucketId=${bucketId}&prefix=${currentPath}&marker=&maxKeys=${otherViewPageSize}&sortField=${sortField}&sortOrder=${sortOrder}`)
+            if (!res.ok) throw new Error('Failed to fetch files')
+            const data = await res.json()
+            
+            const files: FileWithUrl[] = []
+            const folders: FolderItem[] = []
+            
+            const responseData = data.files || []
+            responseData.forEach((item: ExtendedFileWithUrl) => {
+              if (item.isFolder || item.type === 'folder') {
+                folders.push({ name: item.name, path: item.key })
+              } else {
+                files.push(item)
+              }
+            })
+            
+            return { files, folders, nextMarker: data.nextMarker, isTruncated: data.isTruncated, total: data.total || 0 }
+          },
+          staleTime: 5 * 60 * 1000,
+        })
+      }
+    }
+  }, [hasNextPage, allData, isFetching, bucketId, currentPath, page, pageSize, sortField, sortOrder, viewMode, queryClient])
   
   // 过滤和排序文件
   const files = useMemo(() => {
@@ -418,6 +494,13 @@ export function FileManager({ bucketId, prefix = '' }: FileManagerProps) {
                     : f
                   )
                 )
+                
+                // 单个文件上传成功后立即刷新文件列表
+                queryClient.invalidateQueries({ 
+                  queryKey: ['files', bucketId, currentPath],
+                  exact: false 
+                })
+                
                 resolve(xhr.response)
               } else {
                 const error = `上传失败: ${xhr.statusText}`
@@ -450,20 +533,25 @@ export function FileManager({ bucketId, prefix = '' }: FileManagerProps) {
         }
       }
       
-      // 检查上传结果
-      const successCount = uploadingFiles.filter(f => f.status === 'success').length
-      const errorCount = uploadingFiles.filter(f => f.status === 'error').length
-      
-      if (successCount > 0) {
-        toast({
-          title: '上传完成',
-          description: `${successCount} 个文件上传成功${errorCount > 0 ? `，${errorCount} 个失败` : ''}`,
+      // 检查上传结果并显示总结
+      setTimeout(() => {
+        setUploadingFiles(currentFiles => {
+          const successCount = currentFiles.filter(f => f.status === 'success').length
+          const errorCount = currentFiles.filter(f => f.status === 'error').length
+          
+          if (successCount > 0 || errorCount > 0) {
+            toast({
+              title: '上传完成',
+              description: `${successCount} 个文件上传成功${errorCount > 0 ? `，${errorCount} 个失败` : ''}`,
+            })
+            
+            // 刷新存储桶列表以更新统计信息
+            queryClient.invalidateQueries({ queryKey: ['buckets'] })
+          }
+          
+          return currentFiles
         })
-        
-        queryClient.invalidateQueries({ queryKey: ['files', bucketId] })
-        // 刷新存储桶列表以更新统计信息
-        queryClient.invalidateQueries({ queryKey: ['buckets'] })
-      }
+      }, 100)
     } catch (error) {
       toast({
         title: '上传失败',
@@ -1237,12 +1325,8 @@ export function FileManager({ bucketId, prefix = '' }: FileManagerProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => {
-            if (hasMore || page < markers.length) {
-              setPage(prev => prev + 1)
-            }
-          }}
-          disabled={(!hasMore && page >= markers.length) || isFetching}
+          onClick={() => setPage(prev => prev + 1)}
+          disabled={!hasNextPage || isFetching}
         >
           下一页
           <ChevronRight className="h-4 w-4 ml-1" />

@@ -11,11 +11,12 @@ interface PreferencesState {
 export const usePreferences = create<PreferencesState>()(
   persist(
     (set) => ({
-      viewMode: 'list',
+      viewMode: 'grid',
       setViewMode: (mode) => set({ viewMode: mode }),
     }),
     {
       name: 'coshub-preferences',
+      version: 1, // 添加版本号，强制重置现有设置
     }
   )
 ) 
