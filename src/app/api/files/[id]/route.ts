@@ -18,7 +18,41 @@ export async function DELETE(
   try {
     const { id } = await params
     
-    // 查找文件记录
+    // 检查是否是临时ID（来自COS但不在数据库中的文件）
+    if (id.startsWith('cos_')) {
+      // 从临时ID中提取文件key和bucketId
+      const key = id.substring(4) // 移除 'cos_' 前缀
+      const bucketId = request.nextUrl.searchParams.get('bucketId')
+      
+      if (!bucketId) {
+        return NextResponse.json({ error: '缺少bucketId参数' }, { status: 400 })
+      }
+      
+      // 获取存储桶信息
+      const bucket = await prisma.bucket.findUnique({
+        where: { id: bucketId }
+      })
+      
+      if (!bucket) {
+        return NextResponse.json({ error: '存储桶不存在' }, { status: 404 })
+      }
+      
+      // 创建COS实例
+      const cos = createCosInstance({
+        secretId: bucket.secretId,
+        secretKey: bucket.secretKey,
+        region: bucket.region,
+        bucket: bucket.name,
+        customDomain: bucket.customDomain || undefined
+      })
+      
+      // 从COS删除文件
+      await deleteCosFile(cos, bucket.name, bucket.region, key)
+      
+      return NextResponse.json({ success: true })
+    }
+    
+    // 查找文件记录（正常的数据库记录）
     const file = await prisma.file.findUnique({
       where: { id },
       include: { bucket: true }
@@ -82,7 +116,55 @@ export async function PUT(
       return NextResponse.json({ error: '请提供新文件名' }, { status: 400 })
     }
     
-    // 查找文件记录
+    // 检查是否是临时ID（来自COS但不在数据库中的文件）
+    if (id.startsWith('cos_')) {
+      // 从临时ID中提取文件key和bucketId
+      const key = id.substring(4) // 移除 'cos_' 前缀
+      const bucketId = request.nextUrl.searchParams.get('bucketId')
+      
+      if (!bucketId) {
+        return NextResponse.json({ error: '缺少bucketId参数' }, { status: 400 })
+      }
+      
+      // 获取存储桶信息
+      const bucket = await prisma.bucket.findUnique({
+        where: { id: bucketId }
+      })
+      
+      if (!bucket) {
+        return NextResponse.json({ error: '存储桶不存在' }, { status: 404 })
+      }
+      
+      // 构建新的 key（保持原有路径，只改变文件名）
+      const oldKeyParts = key.split('/')
+      oldKeyParts.pop() // 移除旧文件名
+      const newKey = oldKeyParts.length > 0 
+        ? `${oldKeyParts.join('/')}/${newName}` 
+        : newName
+      
+      // 创建COS实例
+      const cos = createCosInstance({
+        secretId: bucket.secretId,
+        secretKey: bucket.secretKey,
+        region: bucket.region,
+        bucket: bucket.name,
+        customDomain: bucket.customDomain || undefined
+      })
+      
+      // 在 COS 中重命名文件
+      await renameFile(cos, bucket.name, bucket.region, key, newKey)
+      
+      return NextResponse.json({
+        success: true,
+        file: {
+          id: `cos_${newKey}`,
+          key: newKey,
+          name: newName
+        }
+      })
+    }
+    
+    // 查找文件记录（正常的数据库记录）
     const file = await prisma.file.findUnique({
       where: { id },
       include: { bucket: true }

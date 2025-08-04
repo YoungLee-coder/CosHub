@@ -349,7 +349,12 @@ export function FileManager({ bucketId, prefix = '' }: FileManagerProps) {
   // 删除文件
   const deleteMutation = useMutation({
     mutationFn: async (fileId: string) => {
-      const res = await fetch(`/api/files/${fileId}`, {
+      // 如果是临时ID，需要添加bucketId参数
+      const url = fileId.startsWith('cos_') 
+        ? `/api/files/${fileId}?bucketId=${bucketId}`
+        : `/api/files/${fileId}`
+      
+      const res = await fetch(url, {
         method: 'DELETE',
       })
       if (!res.ok) {
@@ -380,7 +385,12 @@ export function FileManager({ bucketId, prefix = '' }: FileManagerProps) {
   // 重命名文件
   const renameMutation = useMutation({
     mutationFn: async ({ fileId, newName }: { fileId: string; newName: string }) => {
-      const res = await fetch(`/api/files/${fileId}`, {
+      // 如果是临时ID，需要添加bucketId参数
+      const url = fileId.startsWith('cos_') 
+        ? `/api/files/${fileId}?bucketId=${bucketId}`
+        : `/api/files/${fileId}`
+      
+      const res = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newName })

@@ -9,7 +9,7 @@ export function createCosInstance(config: CosConfig): COS {
   if (secretKey.includes(':')) {
     secretKey = decrypt(config.secretKey)
   }
-  
+
   return new COS({
     SecretId: config.secretId,
     SecretKey: secretKey,
@@ -36,7 +36,7 @@ export async function listFiles(
         reject(err)
         return
       }
-      
+
       const files: CosFile[] = data.Contents.map(item => ({
         key: item.Key,
         name: item.Key.split('/').pop() || item.Key,
@@ -45,7 +45,7 @@ export async function listFiles(
         eTag: item.ETag,
         storageClass: item.StorageClass,
       }))
-      
+
       resolve(files)
     })
   })
@@ -80,7 +80,7 @@ export async function uploadFile(
         reject(err)
         return
       }
-      
+
       resolve({
         key,
         location: data.Location,
@@ -185,11 +185,14 @@ export async function copyFile(
   targetKey: string
 ): Promise<void> {
   return new Promise((resolve, reject) => {
+    // 对源文件路径进行URL编码，避免中文字符导致的错误
+    const encodedSourceKey = encodeURIComponent(sourceKey)
+
     cos.putObjectCopy({
       Bucket: targetBucket,
       Region: targetRegion,
       Key: targetKey,
-      CopySource: `${sourceBucket}.cos.${sourceRegion}.myqcloud.com/${sourceKey}`,
+      CopySource: `${sourceBucket}.cos.${sourceRegion}.myqcloud.com/${encodedSourceKey}`,
     }, (err) => {
       if (err) {
         reject(err)
@@ -228,7 +231,7 @@ export async function renameFile(
 ): Promise<void> {
   // 先复制文件到新路径
   await copyFile(cos, bucket, region, oldKey, bucket, region, newKey)
-  
+
   // 然后删除原文件
   await deleteFile(cos, bucket, region, oldKey)
 } 

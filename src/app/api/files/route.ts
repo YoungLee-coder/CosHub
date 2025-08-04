@@ -245,7 +245,7 @@ export async function GET(request: NextRequest) {
       )
       
       return {
-        id: dbFile?.id || null,
+        id: dbFile?.id || `cos_${item.key}`, // 为没有数据库记录的文件生成临时ID
         key: item.key,
         name: item.name,
         size: item.size,
@@ -254,7 +254,8 @@ export async function GET(request: NextRequest) {
         uploadedAt: dbFile?.uploadedAt || item.lastModified,
         url: fileUrl,
         thumbnailUrl: thumbnailUrl,
-        bucketId: bucketId
+        bucketId: bucketId,
+        isFromCos: !dbFile // 标记是否来自COS但不在数据库中
       }
     })
     
