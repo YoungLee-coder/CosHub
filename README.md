@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CosHub
 
-## Getting Started
+A modern, high-performance web management panel for Tencent Cloud COS (Cloud Object Storage).
 
-First, run the development server:
+一个现代化、高性能的腾讯云 COS 对象存储 Web 管理面板。
+
+## Features / 功能特性
+
+- **Password Protection / 密码保护** - Single password authentication with JWT session
+- **Multi-Bucket Support / 多存储桶支持** - Switch between different buckets easily
+- **File Management / 文件管理** - Upload, download, rename, delete files
+- **Folder Navigation / 文件夹导航** - Breadcrumb navigation with URL state sync
+- **File Preview / 文件预览** - Preview images and videos directly
+- **Drag & Drop Upload / 拖拽上传** - Upload files with progress indicator
+- **Batch Operations / 批量操作** - Select and delete multiple files
+- **Custom CDN Domain / 自定义 CDN 域名** - Support custom domain for file links
+- **Copy Link / 复制链接** - Quick copy file URL to clipboard
+
+## Tech Stack / 技术栈
+
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS v4
+- shadcn/ui
+- TanStack Query & Table
+- nuqs (URL state)
+- cos-nodejs-sdk-v5
+
+## Getting Started / 快速开始
+
+### 1. Install Dependencies / 安装依赖
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Environment / 配置环境变量
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.local.example` to `.env.local` and fill in your credentials:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+复制 `.env.local.example` 为 `.env.local` 并填写配置：
 
-## Learn More
+```env
+# COS Configuration / COS 配置
+COS_SECRET_ID=your_secret_id
+COS_SECRET_KEY=your_secret_key
+COS_REGION=ap-guangzhou
 
-To learn more about Next.js, take a look at the following resources:
+# Custom CDN Domain (optional) / 自定义 CDN 域名（可选）
+COS_CDN_DOMAIN=https://cdn.example.com
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Authentication / 认证配置
+ACCESS_PASSWORD=your_access_password
+AUTH_SECRET=your_random_secret_string_at_least_32_chars
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Run Development Server / 启动开发服务器
 
-## Deploy on Vercel
+```bash
+pnpm dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+在浏览器中打开 [http://localhost:3000](http://localhost:3000)。
+
+### 4. Build for Production / 构建生产版本
+
+```bash
+pnpm build
+pnpm start
+```
+
+## Environment Variables / 环境变量说明
+
+| Variable / 变量 | Required / 必填 | Description / 说明 |
+|----------------|-----------------|-------------------|
+| `COS_SECRET_ID` | Yes / 是 | Tencent Cloud SecretId / 腾讯云 SecretId |
+| `COS_SECRET_KEY` | Yes / 是 | Tencent Cloud SecretKey / 腾讯云 SecretKey |
+| `COS_REGION` | Yes / 是 | COS Region (e.g. ap-guangzhou) / COS 地域 |
+| `COS_CDN_DOMAIN` | No / 否 | Custom CDN domain / 自定义 CDN 域名 |
+| `ACCESS_PASSWORD` | Yes / 是 | Login password / 登录密码 |
+| `AUTH_SECRET` | Yes / 是 | JWT secret (32+ chars) / JWT 密钥 |
+
+## License / 许可证
+
+MIT
