@@ -1,12 +1,11 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getBuckets } from '@/actions/cos'
-import { logout } from '@/actions/auth'
+import { useRouter } from 'next/navigation'
+import { getBuckets, logout } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import { Database, LogOut, Loader2, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { BucketItem } from '@/lib/cos'
 
 interface BucketSidebarProps {
   selectedBucket: string | null
@@ -14,10 +13,16 @@ interface BucketSidebarProps {
 }
 
 export function BucketSidebar({ selectedBucket, onSelectBucket }: BucketSidebarProps) {
+  const router = useRouter()
   const { data: buckets, isLoading } = useQuery({
     queryKey: ['buckets'],
     queryFn: getBuckets,
   })
+
+  const handleLogout = async () => {
+    await logout()
+    router.push('/login')
+  }
 
   return (
     <aside className="w-64 h-screen bg-neutral-50 border-r border-neutral-200 flex flex-col">
@@ -65,16 +70,15 @@ export function BucketSidebar({ selectedBucket, onSelectBucket }: BucketSidebarP
       </div>
 
       <div className="p-3 border-t border-neutral-200">
-        <form action={logout}>
-          <Button
-            type="submit"
-            variant="ghost"
-            className="w-full justify-start text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            退出登录
-          </Button>
-        </form>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleLogout}
+          className="w-full justify-start text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200"
+        >
+          <LogOut className="w-4 h-4 mr-2" />
+          退出登录
+        </Button>
       </div>
     </aside>
   )

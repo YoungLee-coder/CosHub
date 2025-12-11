@@ -17,7 +17,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { makeFolder } from '@/actions/cos'
+import { createFolder } from '@/lib/api'
 import { toast } from 'sonner'
 
 export function MainPanel() {
@@ -47,7 +47,7 @@ export function MainPanel() {
     setCreating(true)
     try {
       const path = prefix + folderName.trim()
-      await makeFolder(bucket, path)
+      await createFolder(bucket, path)
       toast.success('文件夹创建成功')
       setNewFolderDialog(false)
       setFolderName('')

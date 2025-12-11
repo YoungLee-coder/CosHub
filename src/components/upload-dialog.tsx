@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
-import { getUploadUrl } from '@/actions/cos'
+import { getUploadUrl } from '@/lib/api'
 import { formatFileSize, joinPath } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'

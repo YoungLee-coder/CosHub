@@ -11,7 +11,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table'
-import { getObjects, removeObject, removeObjects, moveObject, getDownloadUrl, getCdnUrl } from '@/actions/cos'
+import { getObjects, deleteObjects, renameObject, getDownloadUrl, getCdnUrl } from '@/lib/api'
 import type { CosFile, CosFolder } from '@/lib/cos'
 import { formatFileSize, formatDate, getFileName, isImageFile, isVideoFile } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -75,20 +75,20 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (key: string) => removeObject(bucket, key),
+    mutationFn: (key: string) => deleteObjects(bucket, [key]),
     onSuccess: () => { toast.success('删除成功'); refetch() },
     onError: () => toast.error('删除失败'),
   })
 
   const batchDeleteMutation = useMutation({
-    mutationFn: (keys: string[]) => removeObjects(bucket, keys),
+    mutationFn: (keys: string[]) => deleteObjects(bucket, keys),
     onSuccess: () => { toast.success('批量删除成功'); setRowSelection({}); refetch() },
     onError: () => toast.error('批量删除失败'),
   })
 
   const renameMutation = useMutation({
     mutationFn: ({ oldKey, newKey }: { oldKey: string; newKey: string }) =>
-      moveObject(bucket, oldKey, newKey),
+      renameObject(bucket, oldKey, newKey),
     onSuccess: () => { toast.success('重命名成功'); setRenameDialog({ open: false, file: null }); refetch() },
     onError: () => toast.error('重命名失败'),
   })

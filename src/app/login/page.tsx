@@ -1,30 +1,52 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Lock, Loader2 } from 'lucide-react'
-import { login } from '@/actions/auth'
+import { login, checkAuth } from '@/lib/api'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
   const router = useRouter()
 
-  async function handleSubmit(formData: FormData) {
+  useEffect(() => {
+    checkAuth().then((authenticated) => {
+      if (authenticated) router.replace('/')
+      else setChecking(false)
+    })
+  }, [router])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!password) return
+
     setLoading(true)
     try {
-      const result = await login(formData)
-      if (result?.error) {
+      const result = await login(password)
+      if (result.error) {
         toast.error(result.error)
+      } else {
+        router.push('/')
       }
     } catch {
-      router.push('/')
+      toast.error('登录失败')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+      </div>
+    )
   }
 
   return (
@@ -39,13 +61,14 @@ export default function LoginPage() {
             输入密码以访问 COS 管理面板
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
-          <form action={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              name="password"
               type="password"
               placeholder="访问密码"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="border-neutral-300 focus:border-neutral-900 focus:ring-neutral-900"
               autoFocus
               disabled={loading}
@@ -53,7 +76,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full bg-neutral-900 hover:bg-neutral-800 text-white"
-              disabled={loading}
+              disabled={loading || !password}
             >
               {loading ? (
                 <>
