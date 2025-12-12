@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useQueryState } from 'nuqs'
 import { BucketSidebar } from './bucket-sidebar'
 import { FileTable } from './file-table'
+import { FileGrid } from './file-grid'
 import { BreadcrumbNav } from './breadcrumb-nav'
 import { UploadDialog } from './upload-dialog'
+import { ViewToggle, type ViewMode } from './view-toggle'
 import { useQueryClient } from '@tanstack/react-query'
 import { FolderPlus, Loader2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,6 +26,7 @@ export function MainPanel() {
   const queryClient = useQueryClient()
   const [bucket, setBucket] = useQueryState('bucket')
   const [prefix, setPrefix] = useQueryState('prefix', { defaultValue: '' })
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [newFolderDialog, setNewFolderDialog] = useState(false)
   const [uploadDialog, setUploadDialog] = useState(false)
   const [folderName, setFolderName] = useState('')
@@ -70,6 +73,7 @@ export function MainPanel() {
               <div className="flex items-center justify-between">
                 <BreadcrumbNav bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
                 <div className="flex items-center gap-2">
+                  <ViewToggle mode={viewMode} onChange={setViewMode} />
                   <Button
                     size="sm"
                     onClick={() => setUploadDialog(true)}
@@ -91,8 +95,12 @@ export function MainPanel() {
               </div>
             </header>
 
-            <div className="flex-1 overflow-auto p-4">
-              <FileTable bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
+            <div className="flex-1 overflow-auto scrollbar-hide p-4">
+              {viewMode === 'list' ? (
+                <FileTable bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
+              ) : (
+                <FileGrid bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
+              )}
             </div>
           </>
         ) : (

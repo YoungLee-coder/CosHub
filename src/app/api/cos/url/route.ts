@@ -23,10 +23,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { key } = await request.json()
-    const cdnDomain = process.env.COS_CDN_DOMAIN
+    let cdnDomain = process.env.COS_CDN_DOMAIN || ''
+
+    // 自动补全协议前缀
+    if (cdnDomain && !cdnDomain.startsWith('http')) {
+      cdnDomain = `https://${cdnDomain}`
+    }
 
     if (cdnDomain && key) {
-      return NextResponse.json({ url: `${cdnDomain}/${encodeURIComponent(key)}` })
+      const url = cdnDomain.endsWith('/')
+        ? `${cdnDomain}${encodeURIComponent(key)}`
+        : `${cdnDomain}/${encodeURIComponent(key)}`
+      return NextResponse.json({ url })
     }
 
     return NextResponse.json({ url: '' })

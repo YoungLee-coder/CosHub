@@ -82,3 +82,9 @@ export async function getCdnUrl(key: string): Promise<string> {
   const data = await res.json()
   return data.url || ''
 }
+
+export async function getCdnDomain(): Promise<string> {
+  const res = await fetch('/api/cos/cdn-domain')
+  const data = await res.json()
+  return data.domain || ''
+}

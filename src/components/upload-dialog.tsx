@@ -42,6 +42,7 @@ export function UploadDialog({ bucket, prefix, open, onOpenChange, onUploadCompl
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.open('PUT', url)
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
             const progress = Math.round((e.loaded / e.total) * 100)

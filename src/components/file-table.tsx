@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,9 +11,9 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table'
-import { getObjects, deleteObjects, renameObject, getDownloadUrl, getCdnUrl } from '@/lib/api'
-import type { CosFile, CosFolder } from '@/lib/cos'
-import { formatFileSize, formatDate, getFileName, isImageFile, isVideoFile } from '@/lib/utils'
+import { deleteObjects, renameObject, getDownloadUrl, getCdnUrl } from '@/lib/api'
+import { useObjects, type FileItem } from '@/hooks/useObjects'
+import { formatFileSize, formatDate, isImageFile, isVideoFile } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
@@ -42,14 +42,6 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface FileItem {
-  key: string
-  name: string
-  size: number
-  lastModified: string
-  isFolder: boolean
-}
-
 interface FileTableProps {
   bucket: string
   prefix: string
@@ -68,11 +60,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewType, setPreviewType] = useState<'image' | 'video' | null>(null)
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['objects', bucket, prefix],
-    queryFn: () => getObjects(bucket, prefix),
-    enabled: !!bucket,
-  })
+  const { items, isLoading, refetch } = useObjects({ bucket, prefix })
 
   const deleteMutation = useMutation({
     mutationFn: (key: string) => deleteObjects(bucket, [key]),
@@ -92,19 +80,6 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
     onSuccess: () => { toast.success('重命名成功'); setRenameDialog({ open: false, file: null }); refetch() },
     onError: () => toast.error('重命名失败'),
   })
-
-  const items: FileItem[] = useMemo(() => {
-    if (!data) return []
-    const folders: FileItem[] = (data.folders || []).map((f: CosFolder) => ({
-      key: f.Prefix, name: getFileName(f.Prefix), size: 0, lastModified: '', isFolder: true,
-    }))
-    const files: FileItem[] = (data.files || [])
-      .filter((f: CosFile) => !f.isFolder)
-      .map((f: CosFile) => ({
-        key: f.Key, name: getFileName(f.Key), size: f.Size, lastModified: f.LastModified, isFolder: false,
-      }))
-    return [...folders, ...files]
-  }, [data])
 
   const handleDownload = async (key: string) => {
     try {
