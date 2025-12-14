@@ -13,9 +13,7 @@ updates:
     rebase-strategy: "auto"
     commit-message:
       prefix: "chore(deps)"
-    labels:
-      - "dependencies"
-      - "automated"
+
     # 按类型分组更新
     groups:
       # React 生态系统
@@ -68,6 +66,4 @@ updates:
       interval: "monthly"
     commit-message:
       prefix: "chore(ci)"
-    labels:
-      - "ci"
-      - "automated"
+
