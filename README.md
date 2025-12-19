@@ -87,53 +87,26 @@ pnpm start
 | `ACCESS_PASSWORD` | Yes / 是 | Login password / 登录密码 |
 | `AUTH_SECRET` | Yes / 是 | JWT secret (32+ chars) / JWT 密钥 |
 
-## EdgeOne KV Storage (Optional) / EdgeOne KV 存储（可选）
+## Configuration / 配置管理
 
-CosHub supports EdgeOne KV storage for managing settings via web interface. When KV is configured, settings stored in KV take priority over environment variables.
+CosHub settings are managed through environment variables in EdgeOne Pages Console.
 
-CosHub 支持使用 EdgeOne KV 存储在线管理配置。配置 KV 后，KV 中的设置优先于环境变量。
+CosHub 的设置通过 EdgeOne Pages 控制台的环境变量管理。
 
-### How it works / 工作原理
+### How to Configure / 如何配置
 
-KV storage is accessed through Next.js Edge Runtime API (`/api/kv/settings`). This API runs on edge nodes and can access KV bindings.
+1. Go to EdgeOne Pages Console → Your Project → Settings → Environment Variables
+2. 进入 EdgeOne Pages 控制台 → 你的项目 → 设置 → 环境变量
+3. Add or update the following variables / 添加或更新以下变量：
+   - `ACCESS_PASSWORD` - Login password / 登录密码
+   - `COS_CDN_DOMAIN` - Custom CDN domain / 自定义 CDN 域名
+4. Redeploy to apply changes / 重新部署以应用更改
 
-KV 存储通过 Next.js Edge Runtime API (`/api/kv/settings`) 访问。该 API 运行在边缘节点上，可以访问 KV 绑定。
+### Note on EdgeOne KV / 关于 EdgeOne KV
 
-### Setup / 配置步骤
+EdgeOne KV storage is currently not available in Next.js projects deployed on EdgeOne Pages. The KV binding only works with standalone Edge Functions (`edge-functions/` directory), which conflicts with Next.js routing.
 
-1. **Create KV Namespace / 创建 KV 命名空间**
-   - Go to EdgeOne Pages Console → KV Storage
-   - 进入 EdgeOne Pages 控制台 → KV 存储
-   - Click "Create Namespace" / 点击「创建命名空间」
-
-2. **Bind to Project / 绑定到项目**
-   - In KV namespace details, click "Bind Project"
-   - 在 KV 命名空间详情中，点击「绑定项目」
-   - Set variable name to `SETTINGS_KV`
-   - 将变量名设置为 `SETTINGS_KV`
-
-3. **Redeploy / 重新部署**
-   - After binding KV, redeploy your project to apply changes
-   - 绑定 KV 后，重新部署项目以应用更改
-
-4. **Use Web Settings / 使用在线设置**
-   - After login, click "Settings" in the sidebar
-   - 登录后，点击侧边栏的「设置」
-   - Configure password and CDN domain
-   - 配置密码和 CDN 域名
-
-### Supported Settings / 支持的配置项
-
-| Setting / 配置项 | KV Key | Description / 说明 |
-|-----------------|--------|-------------------|
-| Access Password / 访问密码 | `access_password` | Login password / 登录密码 |
-| CDN Domain / CDN 域名 | `cos_cdn_domain` | Custom CDN domain / 自定义 CDN 域名 |
-
-### API Endpoint / API 端点
-
-| Path / 路径 | Description / 说明 |
-|------------|-------------------|
-| `/api/kv/settings` | GET/PUT - Manage settings via KV (requires auth) / 通过 KV 管理设置（需登录）|
+EdgeOne KV 存储目前在部署于 EdgeOne Pages 的 Next.js 项目中不可用。KV 绑定仅适用于独立的 Edge Functions（`edge-functions/` 目录），与 Next.js 路由存在冲突。
 
 ## License / 许可证
 

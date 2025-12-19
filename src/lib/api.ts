@@ -104,8 +104,9 @@ export interface SettingsResponse {
 }
 
 export async function getSettings(): Promise<SettingsResponse> {
-  // Pages Function 路径
-  const res = await fetch('/kv-settings')
+  // 注意：EdgeOne KV 在 Next.js 项目中暂不可用
+  // 返回基于环境变量的配置状态
+  const res = await fetch('/api/settings')
   if (!res.ok) throw new Error('Failed to fetch settings')
   return res.json()
 }
@@ -114,7 +115,7 @@ export async function updateSettings(settings: {
   accessPassword?: string
   cdnDomain?: string
 }): Promise<void> {
-  const res = await fetch('/kv-settings', {
+  const res = await fetch('/api/settings', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settings),
