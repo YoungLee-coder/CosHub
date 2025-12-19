@@ -1,4 +1,4 @@
-// EdgeOne Pages Edge Function for KV Settings
+// EdgeOne Pages Function for KV Settings
 // 路径: /kv/settings
 
 const KV_KEYS = {
@@ -30,7 +30,6 @@ interface Context {
 export async function onRequestGet(context: Context): Promise<Response> {
   const { request, env } = context
   
-  // 调试信息：检查 env 中有什么
   const envKeys = Object.keys(env || {})
   
   if (!verifyToken(request)) {
@@ -60,7 +59,7 @@ export async function onRequestGet(context: Context): Promise<Response> {
 
   return new Response(JSON.stringify({
     kvAvailable,
-    envKeys, // 调试：返回 env 中的所有键
+    envKeys,
     settings: {
       accessPassword: (kvPassword || envPassword) ? '******' : '',
       cdnDomain: kvCdnDomain || envCdnDomain,
