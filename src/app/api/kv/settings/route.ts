@@ -1,60 +1,57 @@
-// EdgeOne Pages Edge Function for KV Settings
-// 这个文件运行在 Edge Runtime，可以访问 KV 存储
+// Next.js Edge Runtime API for KV Settings
+// 使用 Edge Runtime 可以访问 EdgeOne KV
+
+export const runtime = 'edge'
 
 // KV 配置键名
 const KV_KEYS = {
   ACCESS_PASSWORD: 'access_password',
   COS_CDN_DOMAIN: 'cos_cdn_domain',
-} as const
-
-// KVNamespace 接口
-interface KVNamespace {
-  get(key: string, type?: 'text' | 'json' | 'arrayBuffer' | 'stream'): Promise<string | null>
-  put(key: string, value: string): Promise<void>
-  delete(key: string): Promise<void>
-}
-
-// EdgeOne 环境变量接口
-interface EdgeOneEnv {
-  SETTINGS_KV?: KVNamespace
-  ACCESS_PASSWORD?: string
-  COS_CDN_DOMAIN?: string
-  AUTH_SECRET?: string
-  [key: string]: unknown
-}
-
-interface EventContext {
-  request: Request
-  env: EdgeOneEnv
-  waitUntil: (task: Promise<unknown>) => void
 }
 
 // 验证 JWT token
-async function verifyToken(request: Request): Promise<boolean> {
+function verifyToken(request: Request): boolean {
   const cookie = request.headers.get('cookie')
   if (!cookie) return false
   
   const sessionMatch = cookie.match(/coshub_session=([^;]+)/)
   if (!sessionMatch) return false
   
-  // 简单验证 token 存在，实际验证由主应用处理
   return sessionMatch[1].length > 0
 }
 
-// GET - 获取设置
-export async function onRequestGet(context: EventContext): Promise<Response> {
-  const { request, env } = context
+// 获取 KV 实例
+function getKV(): KVNamespace | null {
+  // EdgeOne Pages 通过 process.env 注入 KV 绑定
+  const kv = (process.env as Record<string, unknown>).SETTINGS_KV
+  if (kv && typeof kv === 'object' && 'get' in kv) {
+    return kv as KVNamespace
+  }
   
+  // 尝试从 globalThis 获取
+  const globalKV = (globalThis as Record<string, unknown>).SETTINGS_KV
+  if (globalKV && typeof globalKV === 'object' && 'get' in globalKV) {
+    return globalKV as KVNamespace
+  }
+  
+  return null
+}
+
+interface KVNamespace {
+  get(key: string, type?: string): Promise<string | null>
+  put(key: string, value: string): Promise<void>
+}
+
+export async function GET(request: Request) {
   // 验证登录状态
-  const isAuthenticated = await verifyToken(request)
-  if (!isAuthenticated) {
+  if (!verifyToken(request)) {
     return new Response(JSON.stringify({ error: '未授权' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
     })
   }
 
-  const kv = env.SETTINGS_KV
+  const kv = getKV()
   const kvAvailable = !!kv
 
   let kvPassword: string | null = null
@@ -69,9 +66,8 @@ export async function onRequestGet(context: EventContext): Promise<Response> {
     }
   }
 
-  // 从 env 获取环境变量（EdgeOne 方式）
-  const envPassword = env.ACCESS_PASSWORD || ''
-  const envCdnDomain = env.COS_CDN_DOMAIN || ''
+  const envPassword = process.env.ACCESS_PASSWORD || ''
+  const envCdnDomain = process.env.COS_CDN_DOMAIN || ''
 
   return new Response(JSON.stringify({
     kvAvailable,
@@ -88,20 +84,16 @@ export async function onRequestGet(context: EventContext): Promise<Response> {
   })
 }
 
-// PUT - 更新设置
-export async function onRequestPut(context: EventContext): Promise<Response> {
-  const { request, env } = context
-
+export async function PUT(request: Request) {
   // 验证登录状态
-  const isAuthenticated = await verifyToken(request)
-  if (!isAuthenticated) {
+  if (!verifyToken(request)) {
     return new Response(JSON.stringify({ error: '未授权' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
     })
   }
 
-  const kv = env.SETTINGS_KV
+  const kv = getKV()
   if (!kv) {
     return new Response(JSON.stringify({ error: 'KV 存储不可用' }), {
       status: 503,

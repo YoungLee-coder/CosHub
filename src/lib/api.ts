@@ -104,8 +104,8 @@ export interface SettingsResponse {
 }
 
 export async function getSettings(): Promise<SettingsResponse> {
-  // Edge Function 路径 (kv-api 避免与 Next.js API 冲突)
-  const res = await fetch('/kv-api/settings')
+  // Next.js Edge Runtime API
+  const res = await fetch('/api/kv/settings')
   if (!res.ok) throw new Error('Failed to fetch settings')
   return res.json()
 }
@@ -114,8 +114,7 @@ export async function updateSettings(settings: {
   accessPassword?: string
   cdnDomain?: string
 }): Promise<void> {
-  // Edge Function 路径
-  const res = await fetch('/kv-api/settings', {
+  const res = await fetch('/api/kv/settings', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settings),

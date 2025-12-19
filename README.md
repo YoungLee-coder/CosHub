@@ -95,9 +95,9 @@ CosHub 支持使用 EdgeOne KV 存储在线管理配置。配置 KV 后，KV 中
 
 ### How it works / 工作原理
 
-KV storage is accessed through EdgeOne Edge Functions located in the `edge-functions/` directory. These functions run on edge nodes and can access KV bindings.
+KV storage is accessed through Next.js Edge Runtime API (`/api/kv/settings`). This API runs on edge nodes and can access KV bindings.
 
-KV 存储通过 `edge-functions/` 目录中的 EdgeOne Edge Functions 访问。这些函数运行在边缘节点上，可以访问 KV 绑定。
+KV 存储通过 Next.js Edge Runtime API (`/api/kv/settings`) 访问。该 API 运行在边缘节点上，可以访问 KV 绑定。
 
 ### Setup / 配置步骤
 
@@ -129,17 +129,11 @@ KV 存储通过 `edge-functions/` 目录中的 EdgeOne Edge Functions 访问。�
 | Access Password / 访问密码 | `access_password` | Login password / 登录密码 |
 | CDN Domain / CDN 域名 | `cos_cdn_domain` | Custom CDN domain / 自定义 CDN 域名 |
 
-### Edge Functions / 边缘函数
-
-The following Edge Functions are included for KV access (under `/kv-api` to avoid conflicts with Next.js API routes):
-
-以下边缘函数用于 KV 访问（位于 `/kv-api` 路径下，避免与 Next.js API 路由冲突）：
+### API Endpoint / API 端点
 
 | Path / 路径 | Description / 说明 |
 |------------|-------------------|
-| `/kv-api/settings` | Get/update settings (requires auth) / 获取/更新设置（需登录）|
-| `/kv-api/config/cdn-domain` | Get CDN domain config / 获取 CDN 域名配置 |
-| `/kv-api/config/password` | Internal: get password for auth / 内部：获取密码用于认证 |
+| `/api/kv/settings` | GET/PUT - Manage settings via KV (requires auth) / 通过 KV 管理设置（需登录）|
 
 ## License / 许可证
 

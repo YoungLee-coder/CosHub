@@ -1,22 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-// 从 Edge Function 获取 CDN 域名
-async function fetchCdnDomain(request: NextRequest): Promise<string> {
-  try {
-    // kv-api 避免与 Next.js API 冲突
-    const url = new URL('/kv-api/config/cdn-domain', request.url)
-    const res = await fetch(url.toString())
-    if (res.ok) {
-      const data = await res.json()
-      return data.domain || ''
-    }
-  } catch (e) {
-    console.error('Failed to get CDN domain from KV:', e)
-  }
-  return process.env.COS_CDN_DOMAIN || ''
-}
-
-export async function GET(request: NextRequest) {
-  const cdnDomain = await fetchCdnDomain(request)
+export async function GET() {
+  // 暂时使用环境变量，KV 功能通过设置页面管理
+  const cdnDomain = process.env.COS_CDN_DOMAIN || ''
   return NextResponse.json({ domain: cdnDomain })
 }

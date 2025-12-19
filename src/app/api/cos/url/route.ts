@@ -20,26 +20,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 从 Edge Function 获取 CDN 域名
-async function fetchCdnDomain(request: NextRequest): Promise<string> {
-  try {
-    // kv-api 避免与 Next.js API 冲突
-    const url = new URL('/kv-api/config/cdn-domain', request.url)
-    const res = await fetch(url.toString())
-    if (res.ok) {
-      const data = await res.json()
-      return data.domain || ''
-    }
-  } catch (e) {
-    console.error('Failed to get CDN domain from KV:', e)
-  }
-  return process.env.COS_CDN_DOMAIN || ''
-}
-
 export async function POST(request: NextRequest) {
   try {
     const { key } = await request.json()
-    let cdnDomain = await fetchCdnDomain(request)
+    // 暂时使用环境变量
+    let cdnDomain = process.env.COS_CDN_DOMAIN || ''
 
     // 自动补全协议前缀
     if (cdnDomain && !cdnDomain.startsWith('http')) {

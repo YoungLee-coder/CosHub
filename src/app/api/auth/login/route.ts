@@ -9,26 +9,8 @@ function getSecretKey() {
   return new TextEncoder().encode(secret)
 }
 
-// 从 Edge Function 获取密码配置
-async function getAccessPassword(request: NextRequest): Promise<string> {
-  try {
-    // 构建内部 API 调用 URL (kv-api 避免与 Next.js API 冲突)
-    const url = new URL('/kv-api/config/password', request.url)
-    const res = await fetch(url.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-internal-key': process.env.AUTH_SECRET || '',
-      },
-    })
-    if (res.ok) {
-      const data = await res.json()
-      return data.password || ''
-    }
-  } catch (e) {
-    console.error('Failed to get password from KV:', e)
-  }
-  // 回退到环境变量
+// 获取访问密码（暂时使用环境变量，KV 功能通过设置页面管理）
+function getAccessPassword(): string {
   return process.env.ACCESS_PASSWORD || ''
 }
 
@@ -40,7 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '请输入密码' }, { status: 400 })
     }
 
-    const accessPassword = await getAccessPassword(request)
+    const accessPassword = getAccessPassword()
     if (!accessPassword || password !== accessPassword) {
       return NextResponse.json({ error: '密码错误' }, { status: 401 })
     }
