@@ -131,15 +131,15 @@ KV 存储通过 `edge-functions/` 目录中的 EdgeOne Edge Functions 访问。�
 
 ### Edge Functions / 边缘函数
 
-The following Edge Functions are included for KV access:
+The following Edge Functions are included for KV access (under `/kv-api` to avoid conflicts with Next.js API routes):
 
-以下边缘函数用于 KV 访问：
+以下边缘函数用于 KV 访问（位于 `/kv-api` 路径下，避免与 Next.js API 路由冲突）：
 
 | Path / 路径 | Description / 说明 |
 |------------|-------------------|
-| `/api/settings` | Get/update settings (requires auth) / 获取/更新设置（需登录）|
-| `/api/config/cdn-domain` | Get CDN domain config / 获取 CDN 域名配置 |
-| `/api/config/password` | Internal: get password for auth / 内部：获取密码用于认证 |
+| `/kv-api/settings` | Get/update settings (requires auth) / 获取/更新设置（需登录）|
+| `/kv-api/config/cdn-domain` | Get CDN domain config / 获取 CDN 域名配置 |
+| `/kv-api/config/password` | Internal: get password for auth / 内部：获取密码用于认证 |
 
 ## License / 许可证
 

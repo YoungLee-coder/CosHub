@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
 // 从 Edge Function 获取 CDN 域名
 async function fetchCdnDomain(request: NextRequest): Promise<string> {
   try {
-    const url = new URL('/api/config/cdn-domain', request.url)
+    // kv-api 避免与 Next.js API 冲突
+    const url = new URL('/kv-api/config/cdn-domain', request.url)
     const res = await fetch(url.toString())
     if (res.ok) {
       const data = await res.json()

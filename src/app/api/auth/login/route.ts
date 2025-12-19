@@ -12,8 +12,8 @@ function getSecretKey() {
 // 从 Edge Function 获取密码配置
 async function getAccessPassword(request: NextRequest): Promise<string> {
   try {
-    // 构建内部 API 调用 URL
-    const url = new URL('/api/config/password', request.url)
+    // 构建内部 API 调用 URL (kv-api 避免与 Next.js API 冲突)
+    const url = new URL('/kv-api/config/password', request.url)
     const res = await fetch(url.toString(), {
       method: 'POST',
       headers: {
