@@ -1,5 +1,5 @@
 // EdgeOne Pages Edge Function for KV Settings
-// 路径: /kv/settings (避免与 Next.js /api 冲突)
+// 路径: /kv/settings
 
 const KV_KEYS = {
   ACCESS_PASSWORD: 'access_password',
@@ -30,6 +30,9 @@ interface Context {
 export async function onRequestGet(context: Context): Promise<Response> {
   const { request, env } = context
   
+  // 调试信息：检查 env 中有什么
+  const envKeys = Object.keys(env || {})
+  
   if (!verifyToken(request)) {
     return new Response(JSON.stringify({ error: '未授权' }), {
       status: 401,
@@ -57,6 +60,7 @@ export async function onRequestGet(context: Context): Promise<Response> {
 
   return new Response(JSON.stringify({
     kvAvailable,
+    envKeys, // 调试：返回 env 中的所有键
     settings: {
       accessPassword: (kvPassword || envPassword) ? '******' : '',
       cdnDomain: kvCdnDomain || envCdnDomain,
@@ -82,7 +86,7 @@ export async function onRequestPut(context: Context): Promise<Response> {
 
   const kv = env.SETTINGS_KV
   if (!kv) {
-    return new Response(JSON.stringify({ error: 'KV 存储不可用' }), {
+    return new Response(JSON.stringify({ error: 'KV 存储不可用', envKeys: Object.keys(env || {}) }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
     })
