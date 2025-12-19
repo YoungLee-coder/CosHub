@@ -19,6 +19,7 @@ A modern, high-performance web management panel for Tencent Cloud COS (Cloud Obj
 - **Batch Operations / 批量操作** - Select and delete multiple files
 - **Custom CDN Domain / 自定义 CDN 域名** - Support custom domain for file links
 - **Copy Link / 复制链接** - Quick copy file URL to clipboard
+- **Web Settings / 在线设置** - Configure password and CDN domain via EdgeOne KV storage
 
 ## Tech Stack / 技术栈
 
@@ -85,6 +86,38 @@ pnpm start
 | `COS_CDN_DOMAIN` | No / 否 | Custom CDN domain / 自定义 CDN 域名 |
 | `ACCESS_PASSWORD` | Yes / 是 | Login password / 登录密码 |
 | `AUTH_SECRET` | Yes / 是 | JWT secret (32+ chars) / JWT 密钥 |
+
+## EdgeOne KV Storage (Optional) / EdgeOne KV 存储（可选）
+
+CosHub supports EdgeOne KV storage for managing settings via web interface. When KV is configured, settings stored in KV take priority over environment variables.
+
+CosHub 支持使用 EdgeOne KV 存储在线管理配置。配置 KV 后，KV 中的设置优先于环境变量。
+
+### Setup / 配置步骤
+
+1. **Create KV Namespace / 创建 KV 命名空间**
+   - Go to EdgeOne Pages Console → KV Storage
+   - 进入 EdgeOne Pages 控制台 → KV 存储
+   - Click "Create Namespace" / 点击「创建命名空间」
+
+2. **Bind to Project / 绑定到项目**
+   - In KV namespace details, click "Bind Project"
+   - 在 KV 命名空间详情中，点击「绑定项目」
+   - Set variable name to `SETTINGS_KV`
+   - 将变量名设置为 `SETTINGS_KV`
+
+3. **Use Web Settings / 使用在线设置**
+   - After login, click "Settings" in the sidebar
+   - 登录后，点击侧边栏的「设置」
+   - Configure password and CDN domain
+   - 配置密码和 CDN 域名
+
+### Supported Settings / 支持的配置项
+
+| Setting / 配置项 | KV Key | Description / 说明 |
+|-----------------|--------|-------------------|
+| Access Password / 访问密码 | `access_password` | Login password / 登录密码 |
+| CDN Domain / CDN 域名 | `cos_cdn_domain` | Custom CDN domain / 自定义 CDN 域名 |
 
 ## License / 许可证
 

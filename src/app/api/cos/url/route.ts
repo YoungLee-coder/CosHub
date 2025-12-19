@@ -22,8 +22,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { getCdnDomain } = await import('@/lib/kv')
     const { key } = await request.json()
-    let cdnDomain = process.env.COS_CDN_DOMAIN || ''
+    let cdnDomain = await getCdnDomain()
 
     // 自动补全协议前缀
     if (cdnDomain && !cdnDomain.startsWith('http')) {

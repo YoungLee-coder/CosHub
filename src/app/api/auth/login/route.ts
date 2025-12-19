@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
+import { getAccessPassword } from '@/lib/kv'
 
 const SESSION_COOKIE_NAME = 'coshub_session'
 
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '请输入密码' }, { status: 400 })
     }
 
-    const accessPassword = process.env.ACCESS_PASSWORD
+    const accessPassword = await getAccessPassword()
     if (!accessPassword || password !== accessPassword) {
       return NextResponse.json({ error: '密码错误' }, { status: 401 })
     }

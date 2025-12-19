@@ -88,3 +88,35 @@ export async function getCdnDomain(): Promise<string> {
   const data = await res.json()
   return data.domain || ''
 }
+
+
+// Settings API
+export interface SettingsResponse {
+  kvAvailable: boolean
+  settings: {
+    accessPassword: string
+    cdnDomain: string
+  }
+  sources: {
+    accessPassword: 'kv' | 'env' | 'none'
+    cdnDomain: 'kv' | 'env' | 'none'
+  }
+}
+
+export async function getSettings(): Promise<SettingsResponse> {
+  const res = await fetch('/api/settings')
+  if (!res.ok) throw new Error('Failed to fetch settings')
+  return res.json()
+}
+
+export async function updateSettings(settings: {
+  accessPassword?: string
+  cdnDomain?: string
+}): Promise<void> {
+  const res = await fetch('/api/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  })
+  if (!res.ok) throw new Error('Failed to update settings')
+}
