@@ -1,49 +1,35 @@
-// Next.js Edge Runtime API for KV Settings
-// 使用 Edge Runtime 可以访问 EdgeOne KV
+// EdgeOne Pages Edge Function for KV Settings
+// 路径: /kv/settings (避免与 Next.js /api 冲突)
 
-export const runtime = 'edge'
-
-// KV 配置键名
 const KV_KEYS = {
   ACCESS_PASSWORD: 'access_password',
   COS_CDN_DOMAIN: 'cos_cdn_domain',
 }
 
-// 验证 JWT token
 function verifyToken(request: Request): boolean {
   const cookie = request.headers.get('cookie')
   if (!cookie) return false
-  
   const sessionMatch = cookie.match(/coshub_session=([^;]+)/)
-  if (!sessionMatch) return false
-  
-  return sessionMatch[1].length > 0
+  return !!(sessionMatch && sessionMatch[1].length > 0)
 }
 
-// 获取 KV 实例
-function getKV(): KVNamespace | null {
-  // EdgeOne Pages 通过 process.env 注入 KV 绑定
-  const kv = (process.env as Record<string, unknown>).SETTINGS_KV
-  if (kv && typeof kv === 'object' && 'get' in kv) {
-    return kv as KVNamespace
-  }
-  
-  // 尝试从 globalThis 获取
-  const globalKV = (globalThis as Record<string, unknown>).SETTINGS_KV
-  if (globalKV && typeof globalKV === 'object' && 'get' in globalKV) {
-    return globalKV as KVNamespace
-  }
-  
-  return null
-}
-
-interface KVNamespace {
+interface KV {
   get(key: string, type?: string): Promise<string | null>
   put(key: string, value: string): Promise<void>
 }
 
-export async function GET(request: Request) {
-  // 验证登录状态
+interface Context {
+  request: Request
+  env: {
+    SETTINGS_KV?: KV
+    ACCESS_PASSWORD?: string
+    COS_CDN_DOMAIN?: string
+  }
+}
+
+export async function onRequestGet(context: Context): Promise<Response> {
+  const { request, env } = context
+  
   if (!verifyToken(request)) {
     return new Response(JSON.stringify({ error: '未授权' }), {
       status: 401,
@@ -51,7 +37,7 @@ export async function GET(request: Request) {
     })
   }
 
-  const kv = getKV()
+  const kv = env.SETTINGS_KV
   const kvAvailable = !!kv
 
   let kvPassword: string | null = null
@@ -66,8 +52,8 @@ export async function GET(request: Request) {
     }
   }
 
-  const envPassword = process.env.ACCESS_PASSWORD || ''
-  const envCdnDomain = process.env.COS_CDN_DOMAIN || ''
+  const envPassword = env.ACCESS_PASSWORD || ''
+  const envCdnDomain = env.COS_CDN_DOMAIN || ''
 
   return new Response(JSON.stringify({
     kvAvailable,
@@ -84,8 +70,9 @@ export async function GET(request: Request) {
   })
 }
 
-export async function PUT(request: Request) {
-  // 验证登录状态
+export async function onRequestPut(context: Context): Promise<Response> {
+  const { request, env } = context
+
   if (!verifyToken(request)) {
     return new Response(JSON.stringify({ error: '未授权' }), {
       status: 401,
@@ -93,7 +80,7 @@ export async function PUT(request: Request) {
     })
   }
 
-  const kv = getKV()
+  const kv = env.SETTINGS_KV
   if (!kv) {
     return new Response(JSON.stringify({ error: 'KV 存储不可用' }), {
       status: 503,
@@ -104,25 +91,20 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json() as { accessPassword?: string; cdnDomain?: string }
     const { accessPassword, cdnDomain } = body
-
     const results: Record<string, boolean> = {}
 
     if (typeof accessPassword === 'string' && accessPassword.trim()) {
       try {
         await kv.put(KV_KEYS.ACCESS_PASSWORD, accessPassword.trim())
         results.accessPassword = true
-      } catch {
-        results.accessPassword = false
-      }
+      } catch { results.accessPassword = false }
     }
 
     if (typeof cdnDomain === 'string') {
       try {
         await kv.put(KV_KEYS.COS_CDN_DOMAIN, cdnDomain.trim())
         results.cdnDomain = true
-      } catch {
-        results.cdnDomain = false
-      }
+      } catch { results.cdnDomain = false }
     }
 
     return new Response(JSON.stringify({ success: true, results }), {
