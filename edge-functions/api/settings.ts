@@ -17,6 +17,9 @@ interface KVNamespace {
 // EdgeOne 环境变量接口
 interface EdgeOneEnv {
   SETTINGS_KV?: KVNamespace
+  ACCESS_PASSWORD?: string
+  COS_CDN_DOMAIN?: string
+  AUTH_SECRET?: string
   [key: string]: unknown
 }
 
@@ -66,8 +69,9 @@ export async function onRequestGet(context: EventContext): Promise<Response> {
     }
   }
 
-  const envPassword = process.env.ACCESS_PASSWORD || ''
-  const envCdnDomain = process.env.COS_CDN_DOMAIN || ''
+  // 从 env 获取环境变量（EdgeOne 方式）
+  const envPassword = env.ACCESS_PASSWORD || ''
+  const envCdnDomain = env.COS_CDN_DOMAIN || ''
 
   return new Response(JSON.stringify({
     kvAvailable,

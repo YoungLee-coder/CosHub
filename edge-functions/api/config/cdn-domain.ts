@@ -2,7 +2,6 @@
 
 // KV 配置键名
 const KV_KEYS = {
-  ACCESS_PASSWORD: 'access_password',
   COS_CDN_DOMAIN: 'cos_cdn_domain',
 } as const
 
@@ -14,6 +13,7 @@ interface KVNamespace {
 // EdgeOne 环境变量接口
 interface EdgeOneEnv {
   SETTINGS_KV?: KVNamespace
+  COS_CDN_DOMAIN?: string
   [key: string]: unknown
 }
 
@@ -26,7 +26,7 @@ export async function onRequestGet(context: EventContext): Promise<Response> {
   const { env } = context
 
   const kv = env.SETTINGS_KV
-  let cdnDomain = process.env.COS_CDN_DOMAIN || ''
+  let cdnDomain = env.COS_CDN_DOMAIN || ''
 
   if (kv) {
     try {

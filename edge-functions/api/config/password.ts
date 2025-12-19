@@ -4,18 +4,18 @@
 // KV 配置键名
 const KV_KEYS = {
   ACCESS_PASSWORD: 'access_password',
-  COS_CDN_DOMAIN: 'cos_cdn_domain',
 } as const
 
 // KVNamespace 接口
 interface KVNamespace {
   get(key: string, type?: 'text' | 'json' | 'arrayBuffer' | 'stream'): Promise<string | null>
-  put(key: string, value: string): Promise<void>
 }
 
 // EdgeOne 环境变量接口
 interface EdgeOneEnv {
   SETTINGS_KV?: KVNamespace
+  ACCESS_PASSWORD?: string
+  AUTH_SECRET?: string
   [key: string]: unknown
 }
 
@@ -30,7 +30,7 @@ export async function onRequestPost(context: EventContext): Promise<Response> {
 
   // 验证内部调用（通过特殊 header）
   const internalKey = request.headers.get('x-internal-key')
-  if (internalKey !== process.env.AUTH_SECRET) {
+  if (internalKey !== env.AUTH_SECRET) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), {
       status: 403,
       headers: { 'Content-Type': 'application/json' },
@@ -38,7 +38,7 @@ export async function onRequestPost(context: EventContext): Promise<Response> {
   }
 
   const kv = env.SETTINGS_KV
-  let password = process.env.ACCESS_PASSWORD || ''
+  let password = env.ACCESS_PASSWORD || ''
 
   if (kv) {
     try {
