@@ -1,7 +1,24 @@
 // EdgeOne Pages Edge Function for KV Settings
 // 这个文件运行在 Edge Runtime，可以访问 KV 存储
 
-import { KV_KEYS, type KVNamespace, type EdgeOneEnv } from '../../src/lib/kv'
+// KV 配置键名
+const KV_KEYS = {
+  ACCESS_PASSWORD: 'access_password',
+  COS_CDN_DOMAIN: 'cos_cdn_domain',
+} as const
+
+// KVNamespace 接口
+interface KVNamespace {
+  get(key: string, type?: 'text' | 'json' | 'arrayBuffer' | 'stream'): Promise<string | null>
+  put(key: string, value: string): Promise<void>
+  delete(key: string): Promise<void>
+}
+
+// EdgeOne 环境变量接口
+interface EdgeOneEnv {
+  SETTINGS_KV?: KVNamespace
+  [key: string]: unknown
+}
 
 interface EventContext {
   request: Request
