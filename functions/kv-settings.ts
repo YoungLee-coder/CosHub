@@ -1,5 +1,5 @@
 // EdgeOne Pages Function for KV Settings
-// 路径: /kv/settings
+// 路径: /kv-settings
 
 const KV_KEYS = {
   ACCESS_PASSWORD: 'access_password',
@@ -20,7 +20,7 @@ interface KV {
 
 interface Context {
   request: Request
-  env: {
+  env: Record<string, unknown> & {
     SETTINGS_KV?: KV
     ACCESS_PASSWORD?: string
     COS_CDN_DOMAIN?: string
@@ -54,8 +54,8 @@ export async function onRequestGet(context: Context): Promise<Response> {
     }
   }
 
-  const envPassword = env.ACCESS_PASSWORD || ''
-  const envCdnDomain = env.COS_CDN_DOMAIN || ''
+  const envPassword = (env.ACCESS_PASSWORD as string) || ''
+  const envCdnDomain = (env.COS_CDN_DOMAIN as string) || ''
 
   return new Response(JSON.stringify({
     kvAvailable,
