@@ -1,5 +1,6 @@
 // EdgeOne Pages KV 存储封装
 // 需要在 EdgeOne Pages 控制台绑定 KV namespace，变量名为 SETTINGS_KV
+// 注意：KV 只能在 Edge Runtime 中使用
 
 // KV 配置键名
 export const KV_KEYS = {
@@ -9,18 +10,8 @@ export const KV_KEYS = {
 
 export type KVKey = (typeof KV_KEYS)[keyof typeof KV_KEYS]
 
-// 获取 KV 实例（仅在 EdgeOne Pages 运行时可用）
-function getKV(): KVNamespace | null {
-  // @ts-expect-error EdgeOne Pages 运行时注入的全局变量
-  if (typeof SETTINGS_KV !== 'undefined') {
-    // @ts-expect-error EdgeOne Pages 运行时注入的全局变量
-    return SETTINGS_KV as KVNamespace
-  }
-  return null
-}
-
 // KVNamespace 接口定义（EdgeOne Pages KV API）
-interface KVNamespace {
+export interface KVNamespace {
   get(key: string, type?: 'text' | 'json' | 'arrayBuffer' | 'stream'): Promise<string | null>
   put(key: string, value: string): Promise<void>
   delete(key: string): Promise<void>
@@ -31,9 +22,14 @@ interface KVNamespace {
   }>
 }
 
-// 从 KV 获取值，如果 KV 不可用或值不存在则返回 null
-export async function getKVValue(key: KVKey): Promise<string | null> {
-  const kv = getKV()
+// EdgeOne Pages 环境变量接口
+export interface EdgeOneEnv {
+  SETTINGS_KV?: KVNamespace
+  [key: string]: unknown
+}
+
+// 从 KV 获取值
+export async function getKVValue(kv: KVNamespace | undefined, key: KVKey): Promise<string | null> {
   if (!kv) return null
   
   try {
@@ -45,8 +41,7 @@ export async function getKVValue(key: KVKey): Promise<string | null> {
 }
 
 // 设置 KV 值
-export async function setKVValue(key: KVKey, value: string): Promise<boolean> {
-  const kv = getKV()
+export async function setKVValue(kv: KVNamespace | undefined, key: KVKey, value: string): Promise<boolean> {
   if (!kv) return false
   
   try {
@@ -58,40 +53,21 @@ export async function setKVValue(key: KVKey, value: string): Promise<boolean> {
   }
 }
 
-// 删除 KV 值
-export async function deleteKVValue(key: KVKey): Promise<boolean> {
-  const kv = getKV()
-  if (!kv) return false
-  
-  try {
-    await kv.delete(key)
-    return true
-  } catch (error) {
-    console.error(`Failed to delete KV value for ${key}:`, error)
-    return false
-  }
-}
-
-// 检查 KV 是否可用
-export function isKVAvailable(): boolean {
-  return getKV() !== null
-}
-
 // 获取配置值（优先 KV，其次环境变量）
-export async function getConfigValue(key: KVKey, envKey: string): Promise<string> {
-  const kvValue = await getKVValue(key)
+export async function getConfigValue(kv: KVNamespace | undefined, key: KVKey, envKey: string): Promise<string> {
+  const kvValue = await getKVValue(kv, key)
   if (kvValue !== null && kvValue !== '') {
     return kvValue
   }
   return process.env[envKey] || ''
 }
 
-// 获取访问密码
-export async function getAccessPassword(): Promise<string> {
-  return getConfigValue(KV_KEYS.ACCESS_PASSWORD, 'ACCESS_PASSWORD')
+// 获取访问密码（需要传入 KV 实例）
+export async function getAccessPassword(kv?: KVNamespace): Promise<string> {
+  return getConfigValue(kv, KV_KEYS.ACCESS_PASSWORD, 'ACCESS_PASSWORD')
 }
 
-// 获取 CDN 域名
-export async function getCdnDomain(): Promise<string> {
-  return getConfigValue(KV_KEYS.COS_CDN_DOMAIN, 'COS_CDN_DOMAIN')
+// 获取 CDN 域名（需要传入 KV 实例）
+export async function getCdnDomain(kv?: KVNamespace): Promise<string> {
+  return getConfigValue(kv, KV_KEYS.COS_CDN_DOMAIN, 'COS_CDN_DOMAIN')
 }

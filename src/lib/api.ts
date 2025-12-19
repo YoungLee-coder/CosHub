@@ -90,7 +90,7 @@ export async function getCdnDomain(): Promise<string> {
 }
 
 
-// Settings API
+// Settings API (通过 Edge Function 访问 KV)
 export interface SettingsResponse {
   kvAvailable: boolean
   settings: {
@@ -104,6 +104,7 @@ export interface SettingsResponse {
 }
 
 export async function getSettings(): Promise<SettingsResponse> {
+  // Edge Function 路径
   const res = await fetch('/api/settings')
   if (!res.ok) throw new Error('Failed to fetch settings')
   return res.json()
@@ -113,6 +114,7 @@ export async function updateSettings(settings: {
   accessPassword?: string
   cdnDomain?: string
 }): Promise<void> {
+  // Edge Function 路径
   const res = await fetch('/api/settings', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

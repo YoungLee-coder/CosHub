@@ -93,6 +93,12 @@ CosHub supports EdgeOne KV storage for managing settings via web interface. When
 
 CosHub 支持使用 EdgeOne KV 存储在线管理配置。配置 KV 后，KV 中的设置优先于环境变量。
 
+### How it works / 工作原理
+
+KV storage is accessed through EdgeOne Edge Functions located in the `edge-functions/` directory. These functions run on edge nodes and can access KV bindings.
+
+KV 存储通过 `edge-functions/` 目录中的 EdgeOne Edge Functions 访问。这些函数运行在边缘节点上，可以访问 KV 绑定。
+
 ### Setup / 配置步骤
 
 1. **Create KV Namespace / 创建 KV 命名空间**
@@ -106,7 +112,11 @@ CosHub 支持使用 EdgeOne KV 存储在线管理配置。配置 KV 后，KV 中
    - Set variable name to `SETTINGS_KV`
    - 将变量名设置为 `SETTINGS_KV`
 
-3. **Use Web Settings / 使用在线设置**
+3. **Redeploy / 重新部署**
+   - After binding KV, redeploy your project to apply changes
+   - 绑定 KV 后，重新部署项目以应用更改
+
+4. **Use Web Settings / 使用在线设置**
    - After login, click "Settings" in the sidebar
    - 登录后，点击侧边栏的「设置」
    - Configure password and CDN domain
@@ -118,6 +128,18 @@ CosHub 支持使用 EdgeOne KV 存储在线管理配置。配置 KV 后，KV 中
 |-----------------|--------|-------------------|
 | Access Password / 访问密码 | `access_password` | Login password / 登录密码 |
 | CDN Domain / CDN 域名 | `cos_cdn_domain` | Custom CDN domain / 自定义 CDN 域名 |
+
+### Edge Functions / 边缘函数
+
+The following Edge Functions are included for KV access:
+
+以下边缘函数用于 KV 访问：
+
+| Path / 路径 | Description / 说明 |
+|------------|-------------------|
+| `/api/settings` | Get/update settings (requires auth) / 获取/更新设置（需登录）|
+| `/api/config/cdn-domain` | Get CDN domain config / 获取 CDN 域名配置 |
+| `/api/config/password` | Internal: get password for auth / 内部：获取密码用于认证 |
 
 ## License / 许可证
 
