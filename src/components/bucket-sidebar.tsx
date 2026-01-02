@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { getBuckets, logout } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import { Database, LogOut, Loader2, FolderOpen, Settings } from 'lucide-react'
+import { Database, LogOut, Loader2, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SettingsDialog } from './settings-dialog'
 
@@ -27,7 +27,7 @@ export function BucketSidebar({ selectedBucket, onSelectBucket }: BucketSidebarP
 
   return (
     <aside className="w-64 h-screen bg-neutral-50 border-r border-neutral-200 flex flex-col">
-      <div className="p-4 border-b border-neutral-200">
+      <div className="h-[57px] px-4 border-b border-neutral-200 flex items-center">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-neutral-900 flex items-center justify-center">
             <Database className="w-4 h-4 text-white" />

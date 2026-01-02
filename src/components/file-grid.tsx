@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { deleteObjects, renameObject, getDownloadUrl, getCdnUrl, getCdnDomain } from '@/lib/api'
 import { useObjects, type FileItem } from '@/hooks/useObjects'
 import { getThumbnailUrl, isThumbnailSupported, getFileIconType, type FileIconType } from '@/lib/thumbnail'
@@ -57,7 +57,6 @@ const FileIcons: Record<FileIconType, typeof File> = {
 }
 
 export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
-  const queryClient = useQueryClient()
   const containerRef = useRef<HTMLDivElement>(null)
   const [columnCount, setColumnCount] = useState(4)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -126,6 +125,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
   const rowCount = Math.ceil(filteredItems.length / columnCount)
 
   // 虚拟滚动配置
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => containerRef.current,
@@ -258,7 +258,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
 
 
   // 渲染单个卡片
-  const renderCard = (file: FileItem, index: number) => {
+  const renderCard = (file: FileItem) => {
     const isSelected = selectedKeys.has(file.key)
     const thumbnailUrl = getThumbnail(file)
     const iconType = getFileIconType(file.name, file.isFolder)
@@ -331,6 +331,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
         {/* 缩略图/图标区域 */}
         <div className="h-[130px] flex items-center justify-center bg-neutral-50 overflow-hidden">
           {thumbnailUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={thumbnailUrl}
               alt={file.name}
@@ -433,7 +434,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
                       paddingBottom: GAP,
                     }}
                   >
-                    {rowItems.map((file, i) => renderCard(file, startIndex + i))}
+                    {rowItems.map((file) => renderCard(file))}
                   </div>
                 </div>
               )
@@ -462,6 +463,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
           <DialogHeader><DialogTitle>预览</DialogTitle></DialogHeader>
           <div className="flex items-center justify-center min-h-[300px]">
             {previewType === 'image' && previewUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={previewUrl} alt="Preview" className="max-w-full max-h-[70vh] object-contain" />
             )}
             {previewType === 'video' && previewUrl && (

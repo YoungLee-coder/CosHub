@@ -28,6 +28,7 @@ export async function GET() {
 }
 
 // PUT - 更新设置（暂不支持）
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function PUT(_request: NextRequest) {
   const isAuthenticated = await verifySession()
   if (!isAuthenticated) {

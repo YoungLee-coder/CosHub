@@ -69,8 +69,8 @@ export function MainPanel() {
       <main className="flex-1 flex flex-col overflow-hidden">
         {bucket ? (
           <>
-            <header className="p-4 border-b border-neutral-200">
-              <div className="flex items-center justify-between">
+            <header className="h-[57px] px-4 border-b border-neutral-200 flex items-center">
+              <div className="flex-1 flex items-center justify-between">
                 <BreadcrumbNav bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
                 <div className="flex items-center gap-2">
                   <ViewToggle mode={viewMode} onChange={setViewMode} />

@@ -215,6 +215,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
     },
   ]
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: items,
     columns,
@@ -296,6 +297,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
           <DialogHeader><DialogTitle>预览</DialogTitle></DialogHeader>
           <div className="flex items-center justify-center min-h-[300px]">
             {previewType === 'image' && previewUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={previewUrl} alt="Preview" className="max-w-full max-h-[70vh] object-contain" />
             )}
             {previewType === 'video' && previewUrl && (

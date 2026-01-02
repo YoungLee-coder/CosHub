@@ -68,6 +68,7 @@ export function UploadDialog({ bucket, prefix, open, onOpenChange, onUploadCompl
     setIsUploading(false)
     toast.success(`已上传 ${acceptedFiles.length} 个文件`)
     onUploadComplete()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bucket, prefix, onUploadComplete])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, noClick: isUploading })
