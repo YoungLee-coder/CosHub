@@ -105,10 +105,9 @@ export interface SettingsResponse {
 
 // 判断是否在 EdgeOne Pages 环境（有 Edge Functions 可用）
 function getSettingsApiUrl(): string {
-  // Edge Functions 路由：/api/settings -> edge-functions/api/settings.ts
-  // 在 EdgeOne Pages 部署时，Edge Functions 会优先处理匹配的路由
-  // 本地开发时，会 fallback 到 Next.js API Routes
-  return '/api/settings'
+  // Edge Functions 路由：/api/kv-settings -> edge-functions/api/kv-settings.ts
+  // 使用 kv- 前缀避免与 Next.js API Routes 冲突
+  return '/api/kv-settings'
 }
 
 export async function getSettings(): Promise<SettingsResponse> {

@@ -4,7 +4,7 @@ export async function GET(request: NextRequest) {
   // 尝试通过 Edge Function 获取 KV 中的 CDN 域名
   try {
     const origin = request.nextUrl.origin
-    const res = await fetch(`${origin}/api/cdn-domain`)
+    const res = await fetch(`${origin}/api/kv-cdn-domain`)
     
     if (res.ok) {
       const data = await res.json()

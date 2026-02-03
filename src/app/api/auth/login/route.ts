@@ -14,7 +14,7 @@ async function verifyPassword(password: string, request: NextRequest): Promise<b
   // 尝试通过 Edge Function 验证（部署到 EdgeOne Pages 后生效）
   try {
     const origin = request.nextUrl.origin
-    const res = await fetch(`${origin}/api/password`, {
+    const res = await fetch(`${origin}/api/kv-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
