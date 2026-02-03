@@ -89,11 +89,26 @@ pnpm start
 
 ## Configuration / 配置管理
 
-CosHub settings are managed through environment variables in EdgeOne Pages Console.
+CosHub supports two configuration methods: EdgeOne KV (recommended) and environment variables.
 
-CosHub 的设置通过 EdgeOne Pages 控制台的环境变量管理。
+CosHub 支持两种配置方式：EdgeOne KV（推荐）和环境变量。
 
-### How to Configure / 如何配置
+### Method 1: EdgeOne KV (Recommended) / 方式一：EdgeOne KV（推荐）
+
+KV storage allows you to modify settings without redeployment.
+
+KV 存储允许你无需重新部署即可修改配置。
+
+1. Go to EdgeOne Pages Console → KV Storage → Apply Now
+2. 进入 EdgeOne Pages 控制台 → KV 存储 → 立即开通
+3. Create a namespace (e.g., `coshub-settings`)
+4. 创建命名空间（如 `coshub-settings`）
+5. Bind the namespace to your project with variable name `SETTINGS_KV`
+6. 将命名空间绑定到项目，变量名设为 `SETTINGS_KV`
+7. After deployment, use the Settings dialog in the app to configure
+8. 部署后，在应用内的设置对话框中进行配置
+
+### Method 2: Environment Variables / 方式二：环境变量
 
 1. Go to EdgeOne Pages Console → Your Project → Settings → Environment Variables
 2. 进入 EdgeOne Pages 控制台 → 你的项目 → 设置 → 环境变量
@@ -102,11 +117,11 @@ CosHub 的设置通过 EdgeOne Pages 控制台的环境变量管理。
    - `COS_CDN_DOMAIN` - Custom CDN domain / 自定义 CDN 域名
 4. Redeploy to apply changes / 重新部署以应用更改
 
-### Note on EdgeOne KV / 关于 EdgeOne KV
+### Priority / 优先级
 
-EdgeOne KV storage is currently not available in Next.js projects deployed on EdgeOne Pages. The KV binding only works with standalone Edge Functions (`edge-functions/` directory), which conflicts with Next.js routing.
+KV settings take precedence over environment variables. If a value exists in KV, it will be used; otherwise, the environment variable is used as fallback.
 
-EdgeOne KV 存储目前在部署于 EdgeOne Pages 的 Next.js 项目中不可用。KV 绑定仅适用于独立的 Edge Functions（`edge-functions/` 目录），与 Next.js 路由存在冲突。
+KV 配置优先于环境变量。如果 KV 中存在值，则使用 KV 值；否则使用环境变量作为后备。
 
 ## License / 许可证
 

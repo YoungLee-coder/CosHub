@@ -116,8 +116,8 @@ export function SettingsDialog() {
           <div className="space-y-4">
             {!data.kvAvailable && (
               <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
-                <p className="font-medium mb-1">当前配置来自环境变量</p>
-                <p>EdgeOne KV 在 Next.js 项目中暂不可用。如需修改配置，请在 EdgeOne Pages 控制台的「环境变量」中设置。</p>
+                <p className="font-medium mb-1">本地开发模式</p>
+                <p>部署到 EdgeOne Pages 并绑定 KV namespace 后，可在此动态修改配置。</p>
               </div>
             )}
 

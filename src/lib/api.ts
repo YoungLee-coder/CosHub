@@ -103,10 +103,16 @@ export interface SettingsResponse {
   }
 }
 
+// 判断是否在 EdgeOne Pages 环境（有 Edge Functions 可用）
+function getSettingsApiUrl(): string {
+  // Edge Functions 路由：/api/settings -> edge-functions/api/settings.ts
+  // 在 EdgeOne Pages 部署时，Edge Functions 会优先处理匹配的路由
+  // 本地开发时，会 fallback 到 Next.js API Routes
+  return '/api/settings'
+}
+
 export async function getSettings(): Promise<SettingsResponse> {
-  // 注意：EdgeOne KV 在 Next.js 项目中暂不可用
-  // 返回基于环境变量的配置状态
-  const res = await fetch('/api/settings')
+  const res = await fetch(getSettingsApiUrl())
   if (!res.ok) throw new Error('Failed to fetch settings')
   return res.json()
 }
@@ -115,7 +121,7 @@ export async function updateSettings(settings: {
   accessPassword?: string
   cdnDomain?: string
 }): Promise<void> {
-  const res = await fetch('/api/settings', {
+  const res = await fetch(getSettingsApiUrl(), {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settings),

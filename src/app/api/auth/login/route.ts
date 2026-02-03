@@ -9,9 +9,28 @@ function getSecretKey() {
   return new TextEncoder().encode(secret)
 }
 
-// 获取访问密码（暂时使用环境变量，KV 功能通过设置页面管理）
-function getAccessPassword(): string {
-  return process.env.ACCESS_PASSWORD || ''
+// 验证密码（优先通过 Edge Function 从 KV 获取，fallback 到环境变量）
+async function verifyPassword(password: string, request: NextRequest): Promise<boolean> {
+  // 尝试通过 Edge Function 验证（部署到 EdgeOne Pages 后生效）
+  try {
+    const origin = request.nextUrl.origin
+    const res = await fetch(`${origin}/api/password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
+    
+    if (res.ok) {
+      const data = await res.json()
+      return data.valid === true
+    }
+  } catch {
+    // Edge Function 不可用，fallback 到环境变量
+  }
+
+  // Fallback: 使用环境变量
+  const accessPassword = process.env.ACCESS_PASSWORD || ''
+  return !!(accessPassword && password === accessPassword)
 }
 
 export async function POST(request: NextRequest) {
@@ -22,8 +41,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '请输入密码' }, { status: 400 })
     }
 
-    const accessPassword = getAccessPassword()
-    if (!accessPassword || password !== accessPassword) {
+    const isValid = await verifyPassword(password, request)
+    if (!isValid) {
       return NextResponse.json({ error: '密码错误' }, { status: 401 })
     }
 
