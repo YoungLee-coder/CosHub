@@ -48,6 +48,9 @@ export async function onRequestGet(context) {
 
   const kv = env.SETTINGS_KV
 
+  // 调试：列出所有 env 中的键
+  const envKeys = Object.keys(env || {})
+
   let kvPassword = null
   let kvCdnDomain = null
 
@@ -76,6 +79,10 @@ export async function onRequestGet(context) {
       sources: {
         accessPassword: kvPassword ? 'kv' : envPassword ? 'env' : 'none',
         cdnDomain: kvCdnDomain ? 'kv' : envCdnDomain ? 'env' : 'none',
+      },
+      debug: {
+        envKeys,
+        hasSettingsKV: 'SETTINGS_KV' in (env || {}),
       },
     }),
     {
