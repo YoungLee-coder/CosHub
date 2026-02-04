@@ -119,9 +119,9 @@ KV 存储允许你无需重新部署即可修改配置。
 
 ### Priority / 优先级
 
-KV settings take precedence over environment variables. If a value exists in KV, it will be used; otherwise, the environment variable is used as fallback.
+KV settings take precedence over environment variables.
 
-KV 配置优先于环境变量。如果 KV 中存在值，则使用 KV 值；否则使用环境变量作为后备。
+KV 配置优先于环境变量。
 
 ## License / 许可证
 

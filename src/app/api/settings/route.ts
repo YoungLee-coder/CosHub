@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifySession } from '@/lib/auth'
 
-// 本地开发 fallback - 当 Edge Functions 不可用时使用
-// 在 EdgeOne Pages 部署后，Edge Functions 会优先处理 /api/settings 路由
-
-// GET - 获取当前设置（基于环境变量，本地开发用）
+// GET - 获取当前设置
 export async function GET() {
   const isAuthenticated = await verifySession()
   if (!isAuthenticated) {
@@ -15,7 +12,7 @@ export async function GET() {
   const cdnDomain = process.env.COS_CDN_DOMAIN || ''
 
   return NextResponse.json({
-    // 本地开发时 KV 不可用，部署到 EdgeOne Pages 后由 Edge Functions 处理
+    // EdgeOne KV 在 Next.js 项目中暂不可用
     kvAvailable: false,
     settings: {
       accessPassword: accessPassword ? '******' : '',
@@ -25,11 +22,10 @@ export async function GET() {
       accessPassword: accessPassword ? 'env' : 'none',
       cdnDomain: cdnDomain ? 'env' : 'none',
     },
-    message: '本地开发模式，KV 功能需部署到 EdgeOne Pages 后使用',
   })
 }
 
-// PUT - 更新设置（本地开发不支持）
+// PUT - 更新设置（暂不支持）
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function PUT(_request: NextRequest) {
   const isAuthenticated = await verifySession()
@@ -37,11 +33,10 @@ export async function PUT(_request: NextRequest) {
     return NextResponse.json({ error: '未授权' }, { status: 401 })
   }
 
-  // 本地开发时 KV 不可用
   return NextResponse.json(
     { 
-      error: '本地开发模式不支持 KV 存储',
-      hint: '部署到 EdgeOne Pages 后，可通过 KV 存储动态修改配置'
+      error: 'EdgeOne KV 在 Next.js 项目中暂不可用',
+      hint: '请在 EdgeOne Pages 控制台的环境变量中设置 ACCESS_PASSWORD 和 COS_CDN_DOMAIN'
     }, 
     { status: 503 }
   )

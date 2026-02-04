@@ -9,26 +9,7 @@ function getSecretKey() {
   return new TextEncoder().encode(secret)
 }
 
-// 验证密码（优先通过 Edge Function 从 KV 获取，fallback 到环境变量）
-async function verifyPassword(password: string, request: NextRequest): Promise<boolean> {
-  // 尝试通过 Edge Function 验证（部署到 EdgeOne Pages 后生效）
-  try {
-    const origin = request.nextUrl.origin
-    const res = await fetch(`${origin}/api/kv-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    })
-    
-    if (res.ok) {
-      const data = await res.json()
-      return data.valid === true
-    }
-  } catch {
-    // Edge Function 不可用，fallback 到环境变量
-  }
-
-  // Fallback: 使用环境变量
+function verifyPassword(password: string): boolean {
   const accessPassword = process.env.ACCESS_PASSWORD || ''
   return !!(accessPassword && password === accessPassword)
 }
@@ -41,7 +22,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '请输入密码' }, { status: 400 })
     }
 
-    const isValid = await verifyPassword(password, request)
+    // 使用环境变量验证密码
+    // 注：KV 中的密码通过 Edge Function /api/kv-password 验证
+    // 但由于 Next.js 路由优先级，这里只能用环境变量
+    const isValid = verifyPassword(password)
     if (!isValid) {
       return NextResponse.json({ error: '密码错误' }, { status: 401 })
     }
