@@ -116,8 +116,8 @@ export function SettingsDialog() {
           <div className="space-y-4">
             {!data.kvAvailable && (
               <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
-                <p className="font-medium mb-1">KV 存储未绑定</p>
-                <p>请在 EdgeOne Pages 控制台绑定 KV namespace（变量名：SETTINGS_KV），即可在此动态修改配置。</p>
+                <p className="font-medium mb-1">当前配置来自环境变量</p>
+                <p>如需修改配置，请在 EdgeOne Pages 控制台的「环境变量」中设置，然后重新部署。</p>
               </div>
             )}
 

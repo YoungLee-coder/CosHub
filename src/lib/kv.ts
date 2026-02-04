@@ -1,17 +1,15 @@
 // EdgeOne Pages KV 存储封装
 // 
-// 架构说明：
-// - Edge Functions 在 edge-functions/ 目录，部署后可通过 /api/kv-* 路径访问
-// - KV 通过 context.env.SETTINGS_KV 访问
-// - Next.js API Routes 作为 fallback（本地开发或 Edge Function 不可用时）
-//
-// 部署配置：
-// 1. 在 EdgeOne Pages 控制台开通 KV 存储
-// 2. 创建 namespace 并绑定到项目，变量名设为 SETTINGS_KV
-// 3. 部署后 Edge Functions 会处理以下路由：
-//    - /api/kv-settings - 设置管理（GET/PUT）
-//    - /api/kv-password - 密码验证（POST）
-//    - /api/kv-cdn-domain - CDN 域名获取（GET）
+// 注意：EdgeOne KV 目前无法在 Next.js 项目中使用
+// 
+// 原因（已验证）：
+// - KV namespace 绑定不会注入到 Next.js 项目的 Edge Functions 的 env 对象中
+// - env 对象只包含普通环境变量（字符串），KV binding（对象）不会被传递
+// - 这与 Cloudflare Pages + Next.js 的限制相同
+// 
+// 当前解决方案：
+// - 使用 EdgeOne Pages 控制台的环境变量管理配置
+// - 修改配置后需要重新部署
 
 // KV 配置键名
 export const KV_KEYS = {
