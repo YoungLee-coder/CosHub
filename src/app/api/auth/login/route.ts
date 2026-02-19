@@ -1,53 +1,117 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { SignJWT } from 'jose'
+import { NextRequest } from 'next/server'
+import { z } from 'zod'
+import {
+  checkRateLimit,
+  recordRateLimitFailure,
+  resetRateLimit,
+} from '@/features/auth/server/rate-limit'
+import {
+  applySessionCookie,
+  createSessionToken,
+  getClientIp,
+  verifyAccessPassword,
+} from '@/features/auth/server/auth.service'
+import {
+  createRequestContext,
+  errorResponse,
+  getDurationMs,
+  successResponse,
+} from '@/lib/http/response'
+import { logApiResult } from '@/lib/server/logger'
 
-const SESSION_COOKIE_NAME = 'coshub_session'
+const loginSchema = z.object({
+  password: z.string().min(1, '请输入密码'),
+})
 
-function getSecretKey() {
-  const secret = process.env.AUTH_SECRET
-  if (!secret) throw new Error('AUTH_SECRET is not set')
-  return new TextEncoder().encode(secret)
-}
-
-function verifyPassword(password: string): boolean {
-  const accessPassword = process.env.ACCESS_PASSWORD || ''
-  return !!(accessPassword && password === accessPassword)
-}
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
+  const context = createRequestContext(request, '/api/auth/login', 'login')
+
   try {
-    const { password } = await request.json()
-
-    if (!password) {
-      return NextResponse.json({ error: '请输入密码' }, { status: 400 })
+    const payload = loginSchema.safeParse(await request.json())
+    if (!payload.success) {
+      logApiResult(
+        {
+          requestId: context.requestId,
+          route: context.route,
+          action: context.action,
+          duration: getDurationMs(context),
+          result: 'error',
+        },
+        payload.error.flatten()
+      )
+      return errorResponse(
+        context,
+        400,
+        'INVALID_REQUEST',
+        payload.error.issues[0]?.message || '请求参数错误'
+      )
     }
 
-    // 使用环境变量验证密码
-    // 注：KV 中的密码通过 Edge Function /api/kv-password 验证
-    // 但由于 Next.js 路由优先级，这里只能用环境变量
-    const isValid = verifyPassword(password)
+    const ip = getClientIp(request)
+    const rateLimitKey = `${ip}:/api/auth/login`
+    const rateLimitResult = checkRateLimit(rateLimitKey)
+    if (!rateLimitResult.allowed) {
+      const response = errorResponse(
+        context,
+        429,
+        'RATE_LIMITED',
+        '请求过于频繁，请稍后再试',
+        undefined,
+        {
+          headers: { 'Retry-After': String(rateLimitResult.retryAfterSeconds) },
+        }
+      )
+
+      logApiResult({
+        requestId: context.requestId,
+        route: context.route,
+        action: context.action,
+        duration: getDurationMs(context),
+        result: 'error',
+      })
+      return response
+    }
+
+    const isValid = verifyAccessPassword(payload.data.password)
     if (!isValid) {
-      return NextResponse.json({ error: '密码错误' }, { status: 401 })
+      recordRateLimitFailure(rateLimitKey)
+      logApiResult({
+        requestId: context.requestId,
+        route: context.route,
+        action: context.action,
+        duration: getDurationMs(context),
+        result: 'error',
+      })
+      return errorResponse(context, 401, 'UNAUTHORIZED', '密码错误')
     }
 
-    const token = await new SignJWT({ authenticated: true })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('7d')
-      .sign(getSecretKey())
+    resetRateLimit(rateLimitKey)
 
-    const response = NextResponse.json({ success: true })
-    response.cookies.set(SESSION_COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
+    const token = await createSessionToken()
+    const response = successResponse(context, { success: true })
+    applySessionCookie(response, token)
+
+    logApiResult({
+      requestId: context.requestId,
+      route: context.route,
+      action: context.action,
+      duration: getDurationMs(context),
+      result: 'success',
     })
-
     return response
   } catch (error) {
-    console.error('Login error:', error)
-    return NextResponse.json({ error: '登录失败' }, { status: 500 })
+    logApiResult(
+      {
+        requestId: context.requestId,
+        route: context.route,
+        action: context.action,
+        duration: getDurationMs(context),
+        result: 'error',
+      },
+      error
+    )
+    return errorResponse(context, 500, 'LOGIN_FAILED', '登录失败')
   }
 }

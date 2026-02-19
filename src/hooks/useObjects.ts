@@ -5,8 +5,8 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getObjects } from '@/lib/api'
-import type { CosFile, CosFolder } from '@/lib/cos'
+import { getObjects } from '@/features/cos/client/cos.api'
+import type { CosFile, CosFolder } from '@/features/cos/types'
 import { getFileName } from '@/lib/utils'
 
 export interface FileItem {
@@ -35,15 +35,15 @@ export function useObjects({ bucket, prefix, enabled = true }: UseObjectsOptions
     queryKey: ['objects', bucket, prefix],
     queryFn: () => getObjects(bucket, prefix),
     enabled: enabled && !!bucket,
-    staleTime: 30 * 1000,        // 30秒内数据视为新鲜
-    gcTime: 5 * 60 * 1000,       // 缓存保留5分钟
+    staleTime: 30 * 1000, // 30秒内数据视为新鲜
+    gcTime: 5 * 60 * 1000, // 缓存保留5分钟
     refetchOnWindowFocus: false, // 禁用窗口聚焦刷新
   })
 
   // 转换为统一的 FileItem 格式
   const items: FileItem[] = useMemo(() => {
     if (!query.data) return []
-    
+
     const folders: FileItem[] = (query.data.folders || []).map((f: CosFolder) => ({
       key: f.Prefix,
       name: getFileName(f.Prefix),
@@ -51,7 +51,7 @@ export function useObjects({ bucket, prefix, enabled = true }: UseObjectsOptions
       lastModified: '',
       isFolder: true,
     }))
-    
+
     const files: FileItem[] = (query.data.files || [])
       .filter((f: CosFile) => !f.isFolder)
       .map((f: CosFile) => ({
@@ -62,7 +62,7 @@ export function useObjects({ bucket, prefix, enabled = true }: UseObjectsOptions
         isFolder: false,
         etag: f.ETag,
       }))
-    
+
     return [...folders, ...files]
   }, [query.data])
 

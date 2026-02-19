@@ -7,6 +7,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -14,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { getSettings, updateSettings } from '@/lib/api'
+import { getSettings, updateSettings } from '@/features/settings/client/settings.api'
 
 interface SettingsData {
   kvAvailable: boolean
@@ -28,8 +29,16 @@ interface SettingsData {
   }
 }
 
-export function SettingsDialog() {
-  const [open, setOpen] = useState(false)
+interface SettingsDialogProps {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsDialogProps = {}) {
+  const isControlled = controlledOpen !== undefined
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen ?? internalOpen
+  const setOpen = onOpenChange ?? setInternalOpen
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [data, setData] = useState<SettingsData | null>(null)
@@ -91,21 +100,21 @@ export function SettingsDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200"
-        >
-          <Settings className="w-4 h-4 mr-2" />
-          设置
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            设置
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>设置</DialogTitle>
-          <DialogDescription>
-            管理应用配置，KV 存储的配置优先于环境变量
-          </DialogDescription>
+          <DialogDescription>管理应用配置，KV 存储的配置优先于环境变量</DialogDescription>
         </DialogHeader>
 
         {loading ? (
@@ -113,46 +122,48 @@ export function SettingsDialog() {
             <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
           </div>
         ) : data ? (
-          <div className="space-y-4">
-            {!data.kvAvailable && (
-              <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
-                <p className="font-medium mb-1">当前配置来自环境变量</p>
-                <p>如需修改配置，请在 EdgeOne Pages 控制台的「环境变量」中设置，然后重新部署。</p>
+          <>
+            <div className="space-y-4">
+              {!data.kvAvailable && (
+                <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
+                  <p className="font-medium mb-1">当前配置来自环境变量</p>
+                  <p>如需修改配置，请在 EdgeOne Pages 控制台的「环境变量」中设置，然后重新部署。</p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="password">访问密码</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="输入新密码以更新"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={!data.kvAvailable}
+                />
+                <p className="text-xs text-neutral-500">
+                  当前状态：{getSourceLabel(data.sources.accessPassword)}
+                  {data.settings.accessPassword && ' (已设置)'}
+                </p>
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="password">访问密码</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="输入新密码以更新"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                disabled={!data.kvAvailable}
-              />
-              <p className="text-xs text-neutral-500">
-                当前状态：{getSourceLabel(data.sources.accessPassword)}
-                {data.settings.accessPassword && ' (已设置)'}
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="cdnDomain">CDN 域名</Label>
+                <Input
+                  id="cdnDomain"
+                  type="text"
+                  placeholder="例如：cdn.example.com"
+                  value={cdnDomain}
+                  onChange={(e) => setCdnDomain(e.target.value)}
+                  disabled={!data.kvAvailable}
+                />
+                <p className="text-xs text-neutral-500">
+                  当前状态：{getSourceLabel(data.sources.cdnDomain)}
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cdnDomain">CDN 域名</Label>
-              <Input
-                id="cdnDomain"
-                type="text"
-                placeholder="例如：cdn.example.com"
-                value={cdnDomain}
-                onChange={(e) => setCdnDomain(e.target.value)}
-                disabled={!data.kvAvailable}
-              />
-              <p className="text-xs text-neutral-500">
-                当前状态：{getSourceLabel(data.sources.cdnDomain)}
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
+            <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>
                 取消
               </Button>
@@ -160,8 +171,8 @@ export function SettingsDialog() {
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 保存
               </Button>
-            </div>
-          </div>
+            </DialogFooter>
+          </>
         ) : null}
       </DialogContent>
     </Dialog>

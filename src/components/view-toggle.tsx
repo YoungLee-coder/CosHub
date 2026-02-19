@@ -12,24 +12,24 @@ interface ViewToggleProps {
 
 export function ViewToggle({ mode, onChange }: ViewToggleProps) {
   return (
-    <div className="flex items-center border border-neutral-200 rounded-md overflow-hidden">
+    <div className="flex items-center rounded-md border">
       <Button
         variant="ghost"
         size="sm"
-        className={`h-8 px-2 rounded-none ${mode === 'list' ? 'bg-neutral-100' : ''}`}
+        className={`h-8 rounded-none border-r px-2 ${mode === 'list' ? 'bg-muted' : ''}`}
         onClick={() => onChange('list')}
         title="列表视图"
       >
-        <List className="w-4 h-4" />
+        <List className="size-4" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        className={`h-8 px-2 rounded-none ${mode === 'grid' ? 'bg-neutral-100' : ''}`}
+        className={`h-8 rounded-none px-2 ${mode === 'grid' ? 'bg-muted' : ''}`}
         onClick={() => onChange('grid')}
         title="网格视图"
       >
-        <LayoutGrid className="w-4 h-4" />
+        <LayoutGrid className="size-4" />
       </Button>
     </div>
   )

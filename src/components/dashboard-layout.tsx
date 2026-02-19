@@ -2,12 +2,14 @@
 
 import { useState } from 'react'
 import { useQueryState } from 'nuqs'
-import { BucketSidebar } from './bucket-sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { AppSidebar } from './app-sidebar'
+import { Separator } from '@/components/ui/separator'
+import { BreadcrumbNav } from './breadcrumb-nav'
+import { ViewToggle, type ViewMode } from './view-toggle'
 import { FileTable } from './file-table'
 import { FileGrid } from './file-grid'
-import { BreadcrumbNav } from './breadcrumb-nav'
 import { UploadDialog } from './upload-dialog'
-import { ViewToggle, type ViewMode } from './view-toggle'
 import { useQueryClient } from '@tanstack/react-query'
 import { FolderPlus, Loader2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,10 +21,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { createFolder } from '@/lib/api'
+import { createFolder } from '@/features/cos/client/cos.api'
 import { toast } from 'sonner'
 
-export function MainPanel() {
+export function DashboardLayout() {
   const queryClient = useQueryClient()
   const [bucket, setBucket] = useQueryState('bucket')
   const [prefix, setPrefix] = useQueryState('prefix', { defaultValue: '' })
@@ -63,58 +65,54 @@ export function MainPanel() {
   }
 
   return (
-    <div className="flex h-screen bg-white text-neutral-900">
-      <BucketSidebar selectedBucket={bucket} onSelectBucket={handleSelectBucket} />
-
-      <main className="flex-1 flex flex-col overflow-hidden">
+    <SidebarProvider className="h-svh overflow-hidden">
+      <AppSidebar selectedBucket={bucket} onSelectBucket={handleSelectBucket} />
+      <SidebarInset className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {bucket ? (
           <>
-            <header className="h-[57px] px-4 border-b border-neutral-200 flex items-center">
-              <div className="flex-1 flex items-center justify-between">
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+              </div>
+              <div className="flex flex-1 items-center justify-between gap-2 overflow-hidden">
                 <BreadcrumbNav bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
                 <div className="flex items-center gap-2">
                   <ViewToggle mode={viewMode} onChange={setViewMode} />
-                  <Button
-                    size="sm"
-                    onClick={() => setUploadDialog(true)}
-                    className="bg-neutral-900 hover:bg-neutral-800 text-white"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    上传
+                  <Button size="sm" onClick={() => setUploadDialog(true)}>
+                    <Upload className="size-4" />
+                    <span className="ml-2 hidden sm:inline">上传</span>
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setNewFolderDialog(true)}
-                    className="border-neutral-300 hover:bg-neutral-100"
-                  >
-                    <FolderPlus className="w-4 h-4 mr-2" />
-                    新建文件夹
+                  <Button variant="outline" size="sm" onClick={() => setNewFolderDialog(true)}>
+                    <FolderPlus className="size-4" />
+                    <span className="ml-2 hidden sm:inline">新建文件夹</span>
                   </Button>
                 </div>
               </div>
             </header>
 
-            <div className="flex-1 overflow-auto scrollbar-hide p-4">
-              {viewMode === 'list' ? (
-                <FileTable bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
-              ) : (
-                <FileGrid bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
-              )}
+            <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                {viewMode === 'list' ? (
+                  <FileTable bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
+                ) : (
+                  <FileGrid bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
+                )}
+              </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-1 items-center justify-center p-4">
             <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-neutral-100 flex items-center justify-center">
-                <FolderPlus className="w-8 h-8 text-neutral-400" />
+              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-xl bg-muted">
+                <FolderPlus className="size-8 text-muted-foreground" />
               </div>
-              <h2 className="text-lg font-medium text-neutral-700 mb-1">选择存储桶</h2>
-              <p className="text-neutral-500 text-sm">从左侧选择一个存储桶开始管理文件</p>
+              <h2 className="mb-1 text-lg font-medium">选择存储桶</h2>
+              <p className="text-sm text-muted-foreground">从左侧选择一个存储桶开始管理文件</p>
             </div>
           </div>
         )}
-      </main>
+      </SidebarInset>
 
       <Dialog open={newFolderDialog} onOpenChange={setNewFolderDialog}>
         <DialogContent>
@@ -132,7 +130,7 @@ export function MainPanel() {
               取消
             </Button>
             <Button onClick={handleCreateFolder} disabled={creating || !folderName.trim()}>
-              {creating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {creating && <Loader2 className="mr-2 size-4 animate-spin" />}
               创建
             </Button>
           </DialogFooter>
@@ -148,6 +146,6 @@ export function MainPanel() {
           onUploadComplete={handleUploadComplete}
         />
       )}
-    </div>
+    </SidebarProvider>
   )
 }

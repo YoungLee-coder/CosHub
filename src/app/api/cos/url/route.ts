@@ -1,46 +1,149 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getPresignedUrl } from '@/lib/cos'
+import { NextRequest } from 'next/server'
+import { z } from 'zod'
+import { requireAuth } from '@/features/auth/server/auth.guard'
+import { buildCdnUrl, getPresignedUrlService } from '@/features/cos/server/cos.service'
+import {
+  createRequestContext,
+  errorResponse,
+  getDurationMs,
+  successResponse,
+} from '@/lib/http/response'
+import { logApiResult } from '@/lib/server/logger'
+
+const presignedUrlQuerySchema = z.object({
+  bucket: z.string().min(1, 'Bucket and key are required'),
+  key: z.string().min(1, 'Bucket and key are required'),
+  method: z.enum(['GET', 'PUT']).default('GET'),
+})
+
+const cdnUrlSchema = z.object({
+  key: z.string().optional().default(''),
+})
+
+export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
+  const context = createRequestContext(request, '/api/cos/url', 'get-presigned-url')
+
+  const authError = await requireAuth(request, context)
+  if (authError) {
+    logApiResult({
+      requestId: context.requestId,
+      route: context.route,
+      action: context.action,
+      duration: getDurationMs(context),
+      result: 'error',
+    })
+    return authError
+  }
+
   try {
     const { searchParams } = new URL(request.url)
-    const bucket = searchParams.get('bucket')
-    const key = searchParams.get('key')
-    const method = (searchParams.get('method') || 'GET') as 'GET' | 'PUT'
+    const parsedQuery = presignedUrlQuerySchema.safeParse({
+      bucket: searchParams.get('bucket') || '',
+      key: searchParams.get('key') || '',
+      method: searchParams.get('method') || 'GET',
+    })
 
-    if (!bucket || !key) {
-      return NextResponse.json({ error: 'Bucket and key are required' }, { status: 400 })
+    if (!parsedQuery.success) {
+      logApiResult(
+        {
+          requestId: context.requestId,
+          route: context.route,
+          action: context.action,
+          duration: getDurationMs(context),
+          result: 'error',
+        },
+        parsedQuery.error.flatten()
+      )
+      return errorResponse(
+        context,
+        400,
+        'INVALID_REQUEST',
+        parsedQuery.error.issues[0]?.message || 'Invalid request'
+      )
     }
 
-    const url = await getPresignedUrl(bucket, key, method, 3600)
-    return NextResponse.json({ url })
+    const url = await getPresignedUrlService(
+      parsedQuery.data.bucket,
+      parsedQuery.data.key,
+      parsedQuery.data.method
+    )
+    logApiResult({
+      requestId: context.requestId,
+      route: context.route,
+      action: context.action,
+      duration: getDurationMs(context),
+      result: 'success',
+    })
+    return successResponse(context, { url })
   } catch (error) {
-    console.error('Get URL error:', error)
-    return NextResponse.json({ error: 'Failed to get URL' }, { status: 500 })
+    logApiResult(
+      {
+        requestId: context.requestId,
+        route: context.route,
+        action: context.action,
+        duration: getDurationMs(context),
+        result: 'error',
+      },
+      error
+    )
+    return errorResponse(context, 500, 'GET_URL_FAILED', 'Failed to get URL')
   }
 }
 
 export async function POST(request: NextRequest) {
+  const context = createRequestContext(request, '/api/cos/url', 'get-cdn-url')
+
+  const authError = await requireAuth(request, context)
+  if (authError) {
+    logApiResult({
+      requestId: context.requestId,
+      route: context.route,
+      action: context.action,
+      duration: getDurationMs(context),
+      result: 'error',
+    })
+    return authError
+  }
+
   try {
-    const { key } = await request.json()
-    // 暂时使用环境变量
-    let cdnDomain = process.env.COS_CDN_DOMAIN || ''
-
-    // 自动补全协议前缀
-    if (cdnDomain && !cdnDomain.startsWith('http')) {
-      cdnDomain = `https://${cdnDomain}`
+    const parsedBody = cdnUrlSchema.safeParse(await request.json())
+    if (!parsedBody.success) {
+      logApiResult(
+        {
+          requestId: context.requestId,
+          route: context.route,
+          action: context.action,
+          duration: getDurationMs(context),
+          result: 'error',
+        },
+        parsedBody.error.flatten()
+      )
+      return errorResponse(context, 400, 'INVALID_REQUEST', 'Invalid request')
     }
 
-    if (cdnDomain && key) {
-      const url = cdnDomain.endsWith('/')
-        ? `${cdnDomain}${encodeURIComponent(key)}`
-        : `${cdnDomain}/${encodeURIComponent(key)}`
-      return NextResponse.json({ url })
-    }
+    const url = buildCdnUrl(parsedBody.data.key)
+    logApiResult({
+      requestId: context.requestId,
+      route: context.route,
+      action: context.action,
+      duration: getDurationMs(context),
+      result: 'success',
+    })
 
-    return NextResponse.json({ url: '' })
+    return successResponse(context, { url })
   } catch (error) {
-    console.error('Get CDN URL error:', error)
-    return NextResponse.json({ error: 'Failed to get CDN URL' }, { status: 500 })
+    logApiResult(
+      {
+        requestId: context.requestId,
+        route: context.route,
+        action: context.action,
+        duration: getDurationMs(context),
+        result: 'error',
+      },
+      error
+    )
+    return errorResponse(context, 500, 'GET_CDN_URL_FAILED', 'Failed to get CDN URL')
   }
 }

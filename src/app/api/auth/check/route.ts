@@ -1,29 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { jwtVerify } from 'jose'
+import { NextRequest } from 'next/server'
+import { isRequestAuthenticated } from '@/features/auth/server/auth.service'
+import { createRequestContext, getDurationMs, successResponse } from '@/lib/http/response'
+import { logApiResult } from '@/lib/server/logger'
 
-const SESSION_COOKIE_NAME = 'coshub_session'
-
-function getSecretKey() {
-  const secret = process.env.AUTH_SECRET
-  if (!secret) return null
-  return new TextEncoder().encode(secret)
-}
+export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  try {
-    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value
-    if (!token) {
-      return NextResponse.json({ authenticated: false })
-    }
+  const context = createRequestContext(request, '/api/auth/check', 'check-session')
+  const authenticated = await isRequestAuthenticated(request)
 
-    const key = getSecretKey()
-    if (!key) {
-      return NextResponse.json({ authenticated: false })
-    }
+  logApiResult({
+    requestId: context.requestId,
+    route: context.route,
+    action: context.action,
+    duration: getDurationMs(context),
+    result: 'success',
+  })
 
-    await jwtVerify(token, key)
-    return NextResponse.json({ authenticated: true })
-  } catch {
-    return NextResponse.json({ authenticated: false })
-  }
+  return successResponse(context, { authenticated })
 }

@@ -4,8 +4,8 @@ A modern, high-performance web management panel for Tencent Cloud COS (Cloud Obj
 
 一个现代化、高性能的腾讯云 COS 对象存储 Web 管理面板。
 
-| Global / 国际版 | China / 国内版 |
-|:---:|:---:|
+|                                                                                                                                                                   Global / 国际版                                                                                                                                                                   |                                                                                                                                                                                       China / 国内版                                                                                                                                                                                       |
+| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | [![Deploy to EdgeOne Pages](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?repository-url=https%3A%2F%2Fgithub.com%2FYoungLee-coder%2FCosHub&env=COS_SECRET_ID,COS_SECRET_KEY,COS_REGION,ACCESS_PASSWORD,AUTH_SECRET&env-description=COS%20configuration%20and%20authentication%20environment%20variables) | [![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://console.cloud.tencent.com/edgeone/pages/new?repository-url=https%3A%2F%2Fgithub.com%2FYoungLee-coder%2FCosHub&env=COS_SECRET_ID,COS_SECRET_KEY,COS_REGION,ACCESS_PASSWORD,AUTH_SECRET&env-description=COS%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%AE%A4%E8%AF%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F) |
 
 ## Features / 功能特性
@@ -76,16 +76,28 @@ pnpm build
 pnpm start
 ```
 
+### 5. Code Quality / 代码质量检查
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm build
+```
+
+Pre-commit checks are powered by Husky + lint-staged after dependencies are installed.
+
+安装依赖后会启用 Husky + lint-staged，在提交前执行最小质量检查。
+
 ## Environment Variables / 环境变量说明
 
-| Variable / 变量 | Required / 必填 | Description / 说明 |
-|----------------|-----------------|-------------------|
-| `COS_SECRET_ID` | Yes / 是 | Tencent Cloud SecretId / 腾讯云 SecretId |
-| `COS_SECRET_KEY` | Yes / 是 | Tencent Cloud SecretKey / 腾讯云 SecretKey |
-| `COS_REGION` | Yes / 是 | COS Region (e.g. ap-guangzhou) / COS 地域 |
-| `COS_CDN_DOMAIN` | No / 否 | Custom CDN domain / 自定义 CDN 域名 |
-| `ACCESS_PASSWORD` | Yes / 是 | Login password / 登录密码 |
-| `AUTH_SECRET` | Yes / 是 | JWT secret (32+ chars) / JWT 密钥 |
+| Variable / 变量   | Required / 必填 | Description / 说明                         |
+| ----------------- | --------------- | ------------------------------------------ |
+| `COS_SECRET_ID`   | Yes / 是        | Tencent Cloud SecretId / 腾讯云 SecretId   |
+| `COS_SECRET_KEY`  | Yes / 是        | Tencent Cloud SecretKey / 腾讯云 SecretKey |
+| `COS_REGION`      | Yes / 是        | COS Region (e.g. ap-guangzhou) / COS 地域  |
+| `COS_CDN_DOMAIN`  | No / 否         | Custom CDN domain / 自定义 CDN 域名        |
+| `ACCESS_PASSWORD` | Yes / 是        | Login password / 登录密码                  |
+| `AUTH_SECRET`     | Yes / 是        | JWT secret (32+ chars) / JWT 密钥          |
 
 ## Configuration / 配置管理
 

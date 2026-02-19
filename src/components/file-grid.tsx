@@ -3,9 +3,20 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useMutation } from '@tanstack/react-query'
-import { deleteObjects, renameObject, getDownloadUrl, getCdnUrl, getCdnDomain } from '@/lib/api'
+import {
+  deleteObjects,
+  renameObject,
+  getDownloadUrl,
+  getCdnUrl,
+  getCdnDomain,
+} from '@/features/cos/client/cos.api'
 import { useObjects, type FileItem } from '@/hooks/useObjects'
-import { getThumbnailUrl, isThumbnailSupported, getFileIconType, type FileIconType } from '@/lib/thumbnail'
+import {
+  getThumbnailUrl,
+  isThumbnailSupported,
+  getFileIconType,
+  type FileIconType,
+} from '@/lib/thumbnail'
 import { formatFileSize, isImageFile, isVideoFile } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -23,8 +34,22 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Folder, File, Image, Video, Music, FileText, FileCode, Archive,
-  MoreVertical, Download, Trash2, Edit, Search, Loader2, Eye, Copy,
+  Folder,
+  File,
+  Image,
+  Video,
+  Music,
+  FileText,
+  FileCode,
+  Archive,
+  MoreVertical,
+  Download,
+  Trash2,
+  Edit,
+  Search,
+  Loader2,
+  Eye,
+  Copy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -76,7 +101,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
   // 获取 CDN 基础域名 (用于缩略图)
   useEffect(() => {
     getCdnDomain()
-      .then(domain => {
+      .then((domain) => {
         if (!domain) {
           setCdnBaseUrl('')
           return
@@ -88,12 +113,11 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
       .catch(() => setCdnBaseUrl(''))
   }, [])
 
-
   // 过滤后的数据
   const filteredItems = useMemo(() => {
     if (!globalFilter) return items
     const lower = globalFilter.toLowerCase()
-    return items.filter(item => item.name.toLowerCase().includes(lower))
+    return items.filter((item) => item.name.toLowerCase().includes(lower))
   }, [items, globalFilter])
 
   // 响应式列数计算 - 使用 ResizeObserver
@@ -136,16 +160,19 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
   // Mutations
   const deleteMutation = useMutation({
     mutationFn: (key: string) => deleteObjects(bucket, [key]),
-    onSuccess: () => { toast.success('删除成功'); refetch() },
+    onSuccess: () => {
+      toast.success('删除成功')
+      refetch()
+    },
     onError: () => toast.error('删除失败'),
   })
 
   const batchDeleteMutation = useMutation({
     mutationFn: (keys: string[]) => deleteObjects(bucket, keys),
-    onSuccess: () => { 
+    onSuccess: () => {
       toast.success('批量删除成功')
       setSelectedKeys(new Set())
-      refetch() 
+      refetch()
     },
     onError: () => toast.error('批量删除失败'),
   })
@@ -153,10 +180,10 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
   const renameMutation = useMutation({
     mutationFn: ({ oldKey, newKey }: { oldKey: string; newKey: string }) =>
       renameObject(bucket, oldKey, newKey),
-    onSuccess: () => { 
+    onSuccess: () => {
       toast.success('重命名成功')
       setRenameDialog({ open: false, file: null })
-      refetch() 
+      refetch()
     },
     onError: () => toast.error('重命名失败'),
   })
@@ -166,29 +193,40 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
     try {
       const url = await getDownloadUrl(bucket, key)
       window.open(url, '_blank')
-    } catch { toast.error('获取下载链接失败') }
+    } catch {
+      toast.error('获取下载链接失败')
+    }
   }
 
   const handleCopyLink = async (key: string) => {
     try {
       const cdnUrl = await getCdnUrl(key)
-      const url = cdnUrl || await getDownloadUrl(bucket, key)
+      const url = cdnUrl || (await getDownloadUrl(bucket, key))
       await navigator.clipboard.writeText(url)
       toast.success('链接已复制')
-    } catch { toast.error('复制链接失败') }
+    } catch {
+      toast.error('复制链接失败')
+    }
   }
 
   const handlePreview = async (file: FileItem) => {
     try {
       const url = await getDownloadUrl(bucket, file.key)
-      if (isImageFile(file.name)) { setPreviewType('image'); setPreviewUrl(url) }
-      else if (isVideoFile(file.name)) { setPreviewType('video'); setPreviewUrl(url) }
-    } catch { toast.error('获取预览链接失败') }
+      if (isImageFile(file.name)) {
+        setPreviewType('image')
+        setPreviewUrl(url)
+      } else if (isVideoFile(file.name)) {
+        setPreviewType('video')
+        setPreviewUrl(url)
+      }
+    } catch {
+      toast.error('获取预览链接失败')
+    }
   }
 
-  const handleRename = (file: FileItem) => { 
+  const handleRename = (file: FileItem) => {
     setNewName(file.name)
-    setRenameDialog({ open: true, file }) 
+    setRenameDialog({ open: true, file })
   }
 
   const confirmRename = () => {
@@ -203,7 +241,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
   }
 
   const toggleSelect = (key: string) => {
-    setSelectedKeys(prev => {
+    setSelectedKeys((prev) => {
       const next = new Set(prev)
       if (next.has(key)) next.delete(key)
       else next.add(key)
@@ -217,45 +255,48 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
     if (cdnBaseUrl === null) return
     // 有 CDN 就不需要签名 URL
     if (cdnBaseUrl) return
-    
-    const imageFiles = items.filter(f => !f.isFolder && isThumbnailSupported(f.name))
+
+    const imageFiles = items.filter((f) => !f.isFolder && isThumbnailSupported(f.name))
     if (imageFiles.length === 0) return
 
     // 批量获取签名 URL
     const fetchUrls = async () => {
       const newUrls = new Map<string, string>()
       await Promise.all(
-        imageFiles.slice(0, 50).map(async (file) => { // 限制并发数
+        imageFiles.slice(0, 50).map(async (file) => {
+          // 限制并发数
           try {
             const url = await getDownloadUrl(bucket, file.key)
             newUrls.set(file.key, getThumbnailUrl(url, file.etag, 280))
           } catch {}
         })
       )
-      setThumbnailUrls(prev => new Map([...prev, ...newUrls]))
+      setThumbnailUrls((prev) => new Map([...prev, ...newUrls]))
     }
     fetchUrls()
   }, [items, cdnBaseUrl, bucket])
 
   // 生成缩略图 URL
-  const getThumbnail = useCallback((file: FileItem): string | null => {
-    if (file.isFolder || !isThumbnailSupported(file.name)) return null
-    
-    // CDN 域名还未加载完成
-    if (cdnBaseUrl === null) return null
-    
-    // 使用 CDN
-    if (cdnBaseUrl) {
-      const baseUrl = cdnBaseUrl.endsWith('/') 
-        ? cdnBaseUrl + encodeURIComponent(file.key)
-        : cdnBaseUrl + '/' + encodeURIComponent(file.key)
-      return getThumbnailUrl(baseUrl, file.etag, 280)
-    }
-    
-    // 回退到签名 URL
-    return thumbnailUrls.get(file.key) || null
-  }, [cdnBaseUrl, thumbnailUrls])
+  const getThumbnail = useCallback(
+    (file: FileItem): string | null => {
+      if (file.isFolder || !isThumbnailSupported(file.name)) return null
 
+      // CDN 域名还未加载完成
+      if (cdnBaseUrl === null) return null
+
+      // 使用 CDN
+      if (cdnBaseUrl) {
+        const baseUrl = cdnBaseUrl.endsWith('/')
+          ? cdnBaseUrl + encodeURIComponent(file.key)
+          : cdnBaseUrl + '/' + encodeURIComponent(file.key)
+        return getThumbnailUrl(baseUrl, file.etag, 280)
+      }
+
+      // 回退到签名 URL
+      return thumbnailUrls.get(file.key) || null
+    },
+    [cdnBaseUrl, thumbnailUrls]
+  )
 
   // 渲染单个卡片
   const renderCard = (file: FileItem) => {
@@ -273,12 +314,15 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
           ${isSelected ? 'ring-2 ring-neutral-900 border-neutral-900' : 'border-neutral-200'}
         `}
         style={{ height: CARD_HEIGHT }}
-        onClick={() => file.isFolder ? onNavigate(file.key) : toggleSelect(file.key)}
+        onClick={() => (file.isFolder ? onNavigate(file.key) : toggleSelect(file.key))}
       >
         {/* 选择框 */}
-        <div 
+        <div
           className="absolute top-2 left-2 z-10"
-          onClick={(e) => { e.stopPropagation(); toggleSelect(file.key) }}
+          onClick={(e) => {
+            e.stopPropagation()
+            toggleSelect(file.key)
+          }}
         >
           <input
             type="checkbox"
@@ -293,9 +337,9 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
           <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="h-7 w-7 p-0 bg-white/80 hover:bg-white shadow-sm"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -305,23 +349,28 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                 {(isImageFile(file.name) || isVideoFile(file.name)) && (
                   <DropdownMenuItem onClick={() => handlePreview(file)}>
-                    <Eye className="w-4 h-4 mr-2" />预览
+                    <Eye className="w-4 h-4 mr-2" />
+                    预览
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={() => handleCopyLink(file.key)}>
-                  <Copy className="w-4 h-4 mr-2" />复制链接
+                  <Copy className="w-4 h-4 mr-2" />
+                  复制链接
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDownload(file.key)}>
-                  <Download className="w-4 h-4 mr-2" />下载
+                  <Download className="w-4 h-4 mr-2" />
+                  下载
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleRename(file)}>
-                  <Edit className="w-4 h-4 mr-2" />重命名
+                  <Edit className="w-4 h-4 mr-2" />
+                  重命名
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => deleteMutation.mutate(file.key)} 
+                <DropdownMenuItem
+                  onClick={() => deleteMutation.mutate(file.key)}
                   className="text-red-600"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />删除
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  删除
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -340,7 +389,9 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <Icon className={`w-12 h-12 ${file.isFolder ? 'text-neutral-700' : 'text-neutral-400'}`} />
+            <Icon
+              className={`w-12 h-12 ${file.isFolder ? 'text-neutral-700' : 'text-neutral-400'}`}
+            />
           )}
         </div>
 
@@ -357,25 +408,24 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
     )
   }
 
-
   return (
     <div className="space-y-4 h-full flex flex-col">
       {/* 工具栏 */}
       <div className="flex items-center gap-3 flex-shrink-0">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-          <Input 
-            placeholder="搜索文件..." 
-            value={globalFilter} 
+          <Input
+            placeholder="搜索文件..."
+            value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-9 border-neutral-300" 
+            className="pl-9 border-neutral-300"
           />
         </div>
         {selectedKeys.size > 0 && (
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={handleBatchDelete} 
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBatchDelete}
             disabled={batchDeleteMutation.isPending}
           >
             {batchDeleteMutation.isPending ? (
@@ -389,8 +439,8 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
       </div>
 
       {/* Grid 容器 - 虚拟滚动 */}
-      <div 
-        ref={containerRef} 
+      <div
+        ref={containerRef}
         className="flex-1 overflow-auto p-1 scrollbar-hide" // p-1 为选中框留出空间
         style={{ contain: 'strict' }} // 性能优化: 隔离重绘
       >
@@ -399,9 +449,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
             <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="flex items-center justify-center h-48 text-neutral-500">
-            暂无文件
-          </div>
+          <div className="flex items-center justify-center h-48 text-neutral-500">暂无文件</div>
         ) : (
           <div
             style={{
@@ -413,7 +461,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const startIndex = virtualRow.index * columnCount
               const rowItems = filteredItems.slice(startIndex, startIndex + columnCount)
-              
+
               return (
                 <div
                   key={virtualRow.key}
@@ -426,7 +474,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <div 
+                  <div
                     className="grid h-full"
                     style={{
                       gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
@@ -444,12 +492,23 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
       </div>
 
       {/* 重命名对话框 */}
-      <Dialog open={renameDialog.open} onOpenChange={(open) => setRenameDialog({ open, file: null })}>
+      <Dialog
+        open={renameDialog.open}
+        onOpenChange={(open) => setRenameDialog({ open, file: null })}
+      >
         <DialogContent>
-          <DialogHeader><DialogTitle>重命名文件</DialogTitle></DialogHeader>
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="新文件名" />
+          <DialogHeader>
+            <DialogTitle>重命名文件</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="新文件名"
+          />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameDialog({ open: false, file: null })}>取消</Button>
+            <Button variant="outline" onClick={() => setRenameDialog({ open: false, file: null })}>
+              取消
+            </Button>
             <Button onClick={confirmRename} disabled={renameMutation.isPending}>
               {renameMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}确认
             </Button>
@@ -460,11 +519,17 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
       {/* 预览对话框 */}
       <Dialog open={!!previewUrl} onOpenChange={() => setPreviewUrl(null)}>
         <DialogContent className="max-w-4xl">
-          <DialogHeader><DialogTitle>预览</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>预览</DialogTitle>
+          </DialogHeader>
           <div className="flex items-center justify-center min-h-[300px]">
             {previewType === 'image' && previewUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewUrl} alt="Preview" className="max-w-full max-h-[70vh] object-contain" />
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-w-full max-h-[70vh] object-contain"
+              />
             )}
             {previewType === 'video' && previewUrl && (
               <video src={previewUrl} controls className="max-w-full max-h-[70vh]" />

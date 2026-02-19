@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Lock, Loader2 } from 'lucide-react'
-import { login, checkAuth } from '@/lib/api'
+import { checkAuth, login } from '@/features/auth/client/auth.api'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
