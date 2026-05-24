@@ -1,6 +1,7 @@
 name: Dependabot Auto Merge
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main, master]
 
@@ -11,7 +12,7 @@ permissions:
 jobs:
   dependabot:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: false
 
     steps:
       - name: Dependabot metadata
