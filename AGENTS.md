@@ -1,156 +1,114 @@
-# AGENTS.md
+# CosHub Development Guide for AI Agents
 
-This document is for coding agents working in this repository.
-Follow these repo-specific commands and conventions.
+You are a senior CosHub engineer working in a Next.js 16 + React 19 + TypeScript + Tailwind CSS v4 project. You prioritize type safety, security, and Server Component best practices.
 
-## Project Snapshot
+## Do
 
-- Stack: Next.js 16 App Router + React 19 + TypeScript + Tailwind CSS v4.
-- Package manager: pnpm (lockfile: `pnpm-lock.yaml`).
-- Node version in CI: Node 22.
-- Lint config: `eslint.config.mjs` with `eslint-config-next/core-web-vitals` and `eslint-config-next/typescript`.
-- Path alias: `@/*` -> `src/*` (from `tsconfig.json`).
-- CI currently runs lint and build only.
+- Group imports: third-party → alias (`@/…`) → relative (`./…`)
+- Use `import type { … }` for type-only imports
+- Prefer alias imports (`@/…`) over long relative traversals
+- Use `strict: true` TypeScript; avoid `any`, prefer explicit types and narrow unions
+- Use discriminated/literal unions for status-like states
+- Keep COS SDK interaction centralized in `src/lib/cos.ts`
+- Keep fetch wrappers centralized in `src/lib/api.ts`
+- Use `cn()` from `src/lib/utils.ts` for class merging
+- Add `'use client'` only when client hooks/browser APIs are required
+- Validate inputs early in API routes; return proper HTTP status codes (400/401/403)
+- Use `NextResponse.json(...)` for consistent API responses
+- Preserve shadcn/ui patterns in `src/components/ui/**`
 
-## Rule Files (Cursor/Copilot)
+## Don't
 
-- `.cursorrules`: not found.
-- `.cursor/rules/`: not found.
-- `.github/copilot-instructions.md`: not found.
-- If any of these files are added later, treat them as mandatory project rules.
+- Never use `as any` — use proper type-safe solutions
+- Never hardcode secrets, API keys, or credentials
+- Never commit `.env` files or sensitive values (`AUTH_SECRET`, `ACCESS_PASSWORD`, `COS_SECRET_ID`, `COS_SECRET_KEY`)
+- Never return stack traces or secrets in error payloads
+- Never rewrite unrelated modules or include cosmetic-only churn
+- Never rename/move files unless required by the task
+- Never add unnecessary `'use client'` directives
+- Never introduce duplicate helpers when existing ones suffice
+- Never skip type checks before finalizing changes
+- Never use non-kebab-case file names for components/util files
 
-## Install / Run Commands
+## Commands
 
-- Install dependencies: `pnpm install`
-- Start dev server: `pnpm dev`
-- Build production bundle: `pnpm build`
-- Start production server: `pnpm start`
-- Run lint: `pnpm lint`
-- Auto-fix lint issues when possible: `pnpm lint --fix`
+See [agents/commands.md](agents/commands.md) for full reference. Key commands:
 
-## Test and Verification Commands
+```bash
+pnpm install        # install dependencies
+pnpm dev            # start dev server
+pnpm lint           # run ESLint
+pnpm build          # production build
+```
 
-- There is currently **no test runner configured** in `package.json`.
-- There are currently no `*.test.*` / `*.spec.*` files in the repo.
-- CI verification is currently:
-  - `pnpm lint`
-  - `pnpm build`
+## Boundaries
 
-### Single-test guidance (important)
+### Always do
 
-- A true "run one test" command is **not available yet** because no test script exists.
-- If a test runner is introduced, add a `test` script and document single-test usage here.
-- Suggested future pattern (Vitest example):
-  - All tests: `pnpm test`
-  - Single file: `pnpm test -- src/path/to/file.test.ts`
-  - Single test name: `pnpm test -- -t "test name"`
+- Run `pnpm lint` and `pnpm build` before finalizing
+- Make minimal, targeted edits
+- Match existing file style (quotes, semicolons, formatting)
+- Keep auth/session logic server-side
+- Wrap API handler bodies in `try/catch`
 
-## Recommended Local Agent Workflow
+### Ask first
 
-1. `pnpm install`
-2. Make the smallest safe code change.
-3. Run targeted lint on touched files when possible.
-4. Run `pnpm lint`.
-5. Run `pnpm build` before finalizing.
+- Adding new dependencies
+- Deleting files
+- Changing response shapes in API routes
+- Introducing a new test framework
 
-## Source Layout
+### Never do
 
-- App routes and API routes: `src/app/**`
-- Reusable UI and feature components: `src/components/**`
-- Hooks: `src/hooks/**`
-- Shared logic/utilities/types: `src/lib/**`
-- Static assets: `public/**`
+- Commit secrets, API keys, or `.env` files
+- Force push or rebase shared branches
+- Bypass input validation in API routes
+- Mix server and client logic without `'use client'` boundary
 
-## Code Style Guidelines
+## Project Structure
 
-### Imports
+```
+src/
+├── app/          # Next.js App Router pages & API routes
+│   ├── api/      # API route handlers
+│   ├── login/    # Login page
+│   ├── page.tsx  # Home page
+│   └── layout.tsx
+├── components/   # Reusable UI & feature components
+├── features/     # Feature modules
+├── hooks/        # Custom React hooks
+└── lib/          # Shared logic, utilities, types
+    ├── cos.ts    # COS SDK centralization
+    ├── http/     # Fetch wrappers & validation
+    ├── kv.ts     # KV store abstraction
+    ├── types.ts  # Domain types
+    └── utils.ts  # cn() and utilities
+```
 
-- Prefer import grouping in this order:
-  1. framework / third-party packages,
-  2. internal alias imports (`@/...`),
-  3. relative imports (`./...`).
-- Keep type-only imports explicit with `import type { ... }` when practical.
-- Prefer alias imports (`@/...`) over long relative traversals.
-- Avoid unused imports; keep files lint-clean.
+### Key files
 
-### Formatting
+- `src/lib/cos.ts` — COS SDK interaction (single source)
+- `src/lib/api.ts` — Fetch wrappers (single source)
+- `src/lib/types.ts` — Domain types
+- `src/lib/utils.ts` — `cn()` and shared utilities
 
-- Follow existing file style instead of reformatting entire files.
-- Current codebase has mixed quote styles (single and double) across files.
-- Match the local style of the file you edit.
-- Use semicolon style consistent with surrounding code (mostly no semicolons in app code).
-- Keep functions and JSX readable; avoid unnecessary one-liners for complex logic.
-- Keep diffs focused; do not include cosmetic-only churn.
+## Tech Stack
 
-### TypeScript and Types
+- **Framework**: Next.js 16 (App Router)
+- **UI**: React 19 + Tailwind CSS v4 + shadcn/ui + Radix
+- **Language**: TypeScript (strict mode)
+- **Data**: TanStack React Query + TanStack Table + TanStack Virtual
+- **Storage**: COS (Tencent Cloud Object Storage) + KV
+- **Auth**: jose (JWT) + access password
+- **Validation**: Zod
+- **State**: nuqs (URL search params state)
+- **Package Manager**: pnpm
+- **Node**: 22 (CI)
 
-- `strict: true` is enabled; preserve strict typing.
-- Avoid `any`; prefer explicit interfaces/types and narrow unions.
-- Type public function inputs/outputs, especially in `src/lib/**` and hooks.
-- For optional values from env/query/body, validate and narrow before use.
-- Prefer domain types from `src/lib/types.ts` or nearby feature types.
-- Use discriminated unions or literal unions for status-like states.
+## Extended Documentation
 
-### Naming Conventions
+For detailed information, see the `agents/` directory:
 
-- Components: PascalCase (`FileTable`, `DashboardLayout`).
-- Hooks: camelCase with `use` prefix (`useObjects`, `useMobile`).
-- Utility functions/variables: camelCase.
-- Constants: UPPER_SNAKE_CASE for true constants (`SESSION_COOKIE_NAME`).
-- Route handlers in `route.ts`: exported uppercase HTTP method names (`GET`, `POST`, etc.).
-- Keep file names kebab-case for components/util files where already used.
-
-### React / Next.js Patterns
-
-- Add `'use client'` only when client hooks/browser APIs are required.
-- Prefer server route handlers for sensitive operations and secrets.
-- Keep API route responses consistent via `NextResponse.json(...)`.
-- In App Router pages/layouts, keep metadata in `export const metadata` when relevant.
-- Preserve shadcn/ui patterns in `src/components/ui/**`.
-
-### Error Handling
-
-- In API routes:
-  - Validate inputs early and return 400/401/403 as appropriate.
-  - Wrap handler bodies in `try/catch` for operational failures.
-  - Log server-side errors with context (`console.error('Action error:', error)`).
-  - Return safe error payloads (no secrets, no stack traces).
-- In client code:
-  - Catch async failures for user-triggered actions.
-  - Show user feedback (existing pattern uses `sonner` toasts).
-  - Throw on non-OK responses in API helper functions when callers should handle errors.
-
-### Environment and Security
-
-- Required env vars are documented in `README.md` and `.env.local.example`.
-- Never hardcode secrets or credentials.
-- Treat `AUTH_SECRET`, `ACCESS_PASSWORD`, `COS_SECRET_ID`, and `COS_SECRET_KEY` as sensitive.
-- Keep auth/session logic server-side when possible.
-
-### API and Data Access
-
-- Keep COS SDK interaction centralized in `src/lib/cos.ts`.
-- Keep fetch wrappers centralized in `src/lib/api.ts`.
-- Reuse existing helpers before introducing duplicates.
-- Preserve current response shapes unless coordinated refactors require updates.
-
-### UI and Styling
-
-- Use Tailwind utility classes and existing component primitives.
-- Reuse `cn()` from `src/lib/utils.ts` for class merging.
-- Prefer existing design tokens and neutral palette conventions already in use.
-- Keep accessibility basics: button semantics, labels, and keyboard-safe interactions.
-
-## Lint/Build Expectations for PRs
-
-- Minimum local gate before handoff:
-  - `pnpm lint`
-  - `pnpm build`
-- If you cannot run commands locally, explicitly state what was not verified.
-
-## Change Scope Guidance
-
-- Make minimal, targeted edits.
-- Do not rewrite unrelated modules.
-- Do not rename/move files unless required by the task.
-- Update this file when tooling or conventions change.
+- **[agents/README.md](agents/README.md)** — Rules index
+- **[agents/rules/](agents/rules/)** — Modular engineering rules
+- **[agents/commands.md](agents/commands.md)** — Complete command reference
