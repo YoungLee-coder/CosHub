@@ -20,8 +20,3 @@
 ## 测试
 
 - 当前无测试框架配置，CI 验证仅依赖 `pnpm lint` 和 `pnpm build`
-
-## 其他
-
-- `pnpm install` - 安装依赖
-- `pnpm prepare` - 安装 Husky Git hooks
