@@ -1,3 +1,6 @@
-onlyBuiltDependencies:
-  - sharp
-  - unrs-resolver
+# pnpm 11+ 用 allowBuilds 显式批准依赖的构建脚本（取代旧的 onlyBuiltDependencies）。
+# CI(CI=true) 下 pnpm 默认对"未批准的构建脚本"硬报错(ERR_PNPM_IGNORED_BUILDS)，
+# 故在此为需要原生构建的依赖显式放行，让 sharp / unrs-resolver 正常完成安装脚本。
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
