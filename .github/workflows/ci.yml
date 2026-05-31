@@ -24,9 +24,10 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install pnpm
+        # 不指定 version，自动读取 package.json 的 packageManager 字段，
+        # 保证 CI 与本地使用完全一致的 pnpm，避免 frozen-lockfile 因版本漂移失败
         uses: pnpm/action-setup@v4
         with:
-          version: 10
           run_install: false
 
       - name: Setup node
