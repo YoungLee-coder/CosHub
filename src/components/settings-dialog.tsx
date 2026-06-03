@@ -1,5 +1,3 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { Settings, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,18 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { getSettings, updateSettings } from '@/features/settings/client/settings.api'
-
-interface SettingsData {
-  kvAvailable: boolean
-  settings: {
-    accessPassword: string
-    cdnDomain: string
-  }
-  sources: {
-    accessPassword: 'kv' | 'env' | 'none'
-    cdnDomain: 'kv' | 'env' | 'none'
-  }
-}
+import type { SettingsResponse } from '@/features/settings/client/settings.api'
 
 interface SettingsDialogProps {
   open?: boolean
@@ -41,7 +28,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
   const setOpen = onOpenChange ?? setInternalOpen
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [data, setData] = useState<SettingsData | null>(null)
+  const [data, setData] = useState<SettingsResponse | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [cdnDomain, setCdnDomain] = useState('')
 
@@ -56,7 +43,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
     try {
       const result = await getSettings()
       setData(result)
-      setCdnDomain(result.settings.cdnDomain)
+      setCdnDomain(result.cdnDomain)
       setNewPassword('')
     } catch {
       toast.error('加载设置失败')
@@ -66,11 +53,6 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
   }
 
   async function handleSave() {
-    if (!data?.kvAvailable) {
-      toast.error('KV 存储不可用，无法保存设置')
-      return
-    }
-
     setSaving(true)
     try {
       await updateSettings({
@@ -84,17 +66,6 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
       toast.error('保存设置失败')
     } finally {
       setSaving(false)
-    }
-  }
-
-  function getSourceLabel(source: 'kv' | 'env' | 'none') {
-    switch (source) {
-      case 'kv':
-        return '来自 KV'
-      case 'env':
-        return '来自环境变量'
-      case 'none':
-        return '未设置'
     }
   }
 
@@ -124,12 +95,10 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
         ) : data ? (
           <>
             <div className="space-y-4">
-              {!data.kvAvailable && (
-                <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
-                  <p className="font-medium mb-1">当前配置来自环境变量</p>
-                  <p>如需修改配置，请在 EdgeOne Pages 控制台的「环境变量」中设置，然后重新部署。</p>
-                </div>
-              )}
+              <div className="rounded-md bg-green-50 p-3 text-sm text-green-800">
+                <p className="font-medium mb-1">配置来源: KV 存储</p>
+                <p>修改配置即时生效，无需重新部署</p>
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">访问密码</Label>
@@ -139,11 +108,10 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
                   placeholder="输入新密码以更新"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  disabled={!data.kvAvailable}
                 />
                 <p className="text-xs text-neutral-500">
-                  当前状态：{getSourceLabel(data.sources.accessPassword)}
-                  {data.settings.accessPassword && ' (已设置)'}
+                  当前状态：{data.accessPassword ? '已设置' : '未设置'}
+                  {data.source === 'env' && ' (来自环境变量)'}
                 </p>
               </div>
 
@@ -155,11 +123,8 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
                   placeholder="例如：cdn.example.com"
                   value={cdnDomain}
                   onChange={(e) => setCdnDomain(e.target.value)}
-                  disabled={!data.kvAvailable}
                 />
-                <p className="text-xs text-neutral-500">
-                  当前状态：{getSourceLabel(data.sources.cdnDomain)}
-                </p>
+                <p className="text-xs text-neutral-500">当前状态：{data.cdnDomain || '未设置'}</p>
               </div>
             </div>
 
@@ -167,7 +132,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
               <Button variant="outline" onClick={() => setOpen(false)}>
                 取消
               </Button>
-              <Button onClick={handleSave} disabled={saving || !data.kvAvailable}>
+              <Button onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 保存
               </Button>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { logout } from '@/features/auth/client/auth.api'
 import { getBuckets } from '@/features/cos/client/cos.api'
 import { Database, LogOut, Loader2, FolderOpen, Settings } from 'lucide-react'
@@ -26,7 +26,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ selectedBucket, onSelectBucket }: AppSidebarProps) {
-  const router = useRouter()
+  const navigate = useNavigate()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { data: buckets, isLoading } = useQuery({
     queryKey: ['buckets'],
@@ -35,7 +35,7 @@ export function AppSidebar({ selectedBucket, onSelectBucket }: AppSidebarProps) 
 
   const handleLogout = async () => {
     await logout()
-    router.push('/login')
+    navigate('/login')
   }
 
   return (

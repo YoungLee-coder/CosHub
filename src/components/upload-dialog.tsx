@@ -95,8 +95,8 @@ export function UploadDialog({
       setIsUploading(false)
       toast.success(`已上传 ${acceptedFiles.length} 个文件`)
       onUploadComplete()
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- uploadFile changes on every render, intentional exclusion
     [bucket, prefix, onUploadComplete]
   )
 

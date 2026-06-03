@@ -1,9 +1,8 @@
-import { requestEnvelope, requestJson } from '@/lib/http/client'
+import { requestJson, requestEnvelope } from '@/lib/http/client'
 
 export async function checkAuth(): Promise<boolean> {
   try {
     const data = await requestJson<{ authenticated: boolean }>('/api/auth/check', {
-      cache: 'no-store',
       fallbackMessage: '认证检查失败',
     })
     return data.authenticated
@@ -24,7 +23,7 @@ export async function login(password: string): Promise<{ success?: boolean; erro
   }
 
   return {
-    error: body?.error?.message || '登录失败',
+    error: (body?.error as string) || '登录失败',
   }
 }
 

@@ -2,14 +2,9 @@ import { requestJson } from '@/lib/http/client'
 
 export interface SettingsResponse {
   kvAvailable: boolean
-  settings: {
-    accessPassword: string
-    cdnDomain: string
-  }
-  sources: {
-    accessPassword: 'kv' | 'env' | 'none'
-    cdnDomain: 'kv' | 'env' | 'none'
-  }
+  accessPassword: string
+  cdnDomain: string
+  source: string
 }
 
 export async function getSettings(): Promise<SettingsResponse> {

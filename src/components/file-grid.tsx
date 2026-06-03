@@ -149,7 +149,6 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
   const rowCount = Math.ceil(filteredItems.length / columnCount)
 
   // 虚拟滚动配置
-  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => containerRef.current,
@@ -268,7 +267,9 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
           try {
             const url = await getDownloadUrl(bucket, file.key)
             newUrls.set(file.key, getThumbnailUrl(url, file.etag, 280))
-          } catch {}
+          } catch {
+            /* skip failed thumbnail */
+          }
         })
       )
       setThumbnailUrls((prev) => new Map([...prev, ...newUrls]))
@@ -380,7 +381,6 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
         {/* 缩略图/图标区域 */}
         <div className="h-[130px] flex items-center justify-center bg-neutral-50 overflow-hidden">
           {thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={thumbnailUrl}
               alt={file.name}
@@ -524,7 +524,6 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
           </DialogHeader>
           <div className="flex items-center justify-center min-h-[300px]">
             {previewType === 'image' && previewUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={previewUrl}
                 alt="Preview"

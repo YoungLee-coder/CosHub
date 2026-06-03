@@ -1,4 +1,8 @@
-import type { ApiResponseEnvelope } from './response'
+interface ApiResponse<T> {
+  success: boolean
+  data: T | null
+  error: string | null
+}
 
 interface RequestJsonOptions extends RequestInit {
   fallbackMessage?: string
@@ -6,20 +10,16 @@ interface RequestJsonOptions extends RequestInit {
 
 export class ApiRequestError extends Error {
   status: number
-  code?: string
-  requestId?: string
 
-  constructor(message: string, status: number, code?: string, requestId?: string) {
+  constructor(message: string, status: number) {
     super(message)
     this.status = status
-    this.code = code
-    this.requestId = requestId
   }
 }
 
-async function parseEnvelope<T>(response: Response): Promise<ApiResponseEnvelope<T> | null> {
+async function parseResponse<T>(response: Response): Promise<ApiResponse<T> | null> {
   try {
-    return (await response.json()) as ApiResponseEnvelope<T>
+    return (await response.json()) as ApiResponse<T>
   } catch {
     return null
   }
@@ -31,18 +31,13 @@ export async function requestJson<T>(
 ): Promise<T> {
   const { fallbackMessage = 'Request failed', ...init } = options
   const response = await fetch(input, init)
-  const envelope = await parseEnvelope<T>(response)
+  const body = await parseResponse<T>(response)
 
-  if (!response.ok || !envelope?.success) {
-    throw new ApiRequestError(
-      envelope?.error?.message || fallbackMessage,
-      response.status,
-      envelope?.error?.code,
-      envelope?.requestId
-    )
+  if (!response.ok || !body?.success) {
+    throw new ApiRequestError(body?.error || fallbackMessage, response.status)
   }
 
-  return envelope.data as T
+  return body.data as T
 }
 
 export async function requestEnvelope<T>(
@@ -50,10 +45,10 @@ export async function requestEnvelope<T>(
   init?: RequestInit
 ): Promise<{
   status: number
-  body: ApiResponseEnvelope<T> | null
+  body: ApiResponse<T> | null
 }> {
   const response = await fetch(input, init)
-  const body = await parseEnvelope<T>(response)
+  const body = await parseResponse<T>(response)
   return {
     status: response.status,
     body,
