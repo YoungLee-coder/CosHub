@@ -23,13 +23,14 @@ A modern, high-performance web management panel for Tencent Cloud COS (Cloud Obj
 
 ## Tech Stack / 技术栈
 
-- Next.js 16 (App Router)
-- TypeScript
-- Tailwind CSS v4
-- shadcn/ui
-- TanStack Query & Table
+- React 19 + Vite + React Router DOM (SPA)
+- EdgeOne Pages (Edge Functions + Cloud Functions + Middleware)
+- TypeScript (strict mode)
+- Tailwind CSS v4 + shadcn/ui
+- TanStack React Query & Table & Virtual
 - nuqs (URL state)
 - cos-nodejs-sdk-v5
+- Zod
 
 ## Getting Started / 快速开始
 
@@ -41,9 +42,9 @@ pnpm install
 
 ### 2. Configure Environment / 配置环境变量
 
-Copy `.env.local.example` to `.env.local` and fill in your credentials:
+Set environment variables in EdgeOne Pages Console → Your Project → Settings → Environment Variables:
 
-复制 `.env.local.example` 为 `.env.local` 并填写配置：
+在 EdgeOne Pages 控制台 → 你的项目 → 设置 → 环境变量中配置：
 
 ```env
 # COS Configuration / COS 配置
@@ -59,21 +60,21 @@ ACCESS_PASSWORD=your_access_password
 AUTH_SECRET=your_random_secret_string_at_least_32_chars
 ```
 
+For local development, create `.env.local` in the project root with the same variables.
+
+本地开发时，在项目根目录创建 `.env.local` 文件填写相同变量。
+
 ### 3. Run Development Server / 启动开发服务器
 
 ```bash
-pnpm dev
+pnpm dev           # EdgeOne Pages local dev server
+pnpm dev:frontend  # Vite dev server (frontend only)
 ```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-在浏览器中打开 [http://localhost:3000](http://localhost:3000)。
 
 ### 4. Build for Production / 构建生产版本
 
 ```bash
 pnpm build
-pnpm start
 ```
 
 ### 5. Code Quality / 代码质量检查
@@ -116,9 +117,9 @@ CosHub 的设置通过 EdgeOne Pages 控制台的环境变量管理。
 
 ### Note on EdgeOne KV / 关于 EdgeOne KV
 
-EdgeOne KV storage is currently not available in Next.js projects deployed on EdgeOne Pages. The KV namespace binding is not injected into the Edge Functions' `env` object in Next.js projects - only string environment variables are passed through.
+EdgeOne KV storage is used for web settings (password and CDN domain). In EdgeOne Pages projects, KV namespace bindings are injected into the Edge Functions' `env` object.
 
-EdgeOne KV 存储目前在部署于 EdgeOne Pages 的 Next.js 项目中不可用。KV namespace 绑定不会注入到 Next.js 项目的 Edge Functions 的 `env` 对象中，只有字符串类型的环境变量会被传递。
+EdgeOne KV 存储用于 Web 设置（密码和 CDN 域名）。在 EdgeOne Pages 项目中，KV namespace 绑定会注入到 Edge Functions 的 `env` 对象中。
 
 ## License / 许可证
 

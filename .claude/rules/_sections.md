@@ -8,7 +8,7 @@
 ## 1. Architecture (architecture)
 
 **Impact:** CRITICAL
-**Description:** 项目分层、数据流、Server/Client Component 职责划分等架构约定。
+**Description:** 项目分层、数据流、SPA 路由与组件职责划分等架构约定。
 
 ## 2. Security (security)
 
@@ -23,7 +23,7 @@
 ## 4. Data Layer (data)
 
 **Impact:** HIGH
-**Description:** COS SDK 交互、KV 存储、数据模型和 fetch 封装规则。
+**Description:** COS SDK 交互、数据模型和 fetch 封装规则。
 
 ## 5. API Design (api)
 
