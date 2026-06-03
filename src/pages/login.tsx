@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     checkAuth().then((authenticated) => {
@@ -30,7 +32,8 @@ export function LoginPage() {
       if (result.error) {
         toast.error(result.error)
       } else {
-        navigate('/')
+        await queryClient.invalidateQueries({ queryKey: ['auth'] })
+        navigate('/', { replace: true })
       }
     } catch {
       toast.error('登录失败')

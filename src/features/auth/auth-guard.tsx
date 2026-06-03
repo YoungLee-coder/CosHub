@@ -8,7 +8,6 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   const { data, isLoading } = useQuery({
     queryKey: ['auth'],
     queryFn: checkAuth,
-    staleTime: 5 * 60 * 1000,
   })
 
   if (isLoading) {
