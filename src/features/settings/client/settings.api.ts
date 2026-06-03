@@ -2,9 +2,10 @@ import { requestJson } from '@/lib/http/client'
 
 export interface SettingsResponse {
   kvAvailable: boolean
-  accessPassword: string
+  cosSecretId: string
+  cosSecretKey: string
+  cosRegion: string
   cdnDomain: string
-  source: string
 }
 
 export async function getSettings(): Promise<SettingsResponse> {
@@ -14,7 +15,9 @@ export async function getSettings(): Promise<SettingsResponse> {
 }
 
 export async function updateSettings(settings: {
-  accessPassword?: string
+  cosSecretId?: string
+  cosSecretKey?: string
+  cosRegion?: string
   cdnDomain?: string
 }): Promise<void> {
   await requestJson<{ success: boolean }>('/api/settings', {

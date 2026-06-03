@@ -5,44 +5,36 @@ function jsonResponse(body, status = 200) {
   })
 }
 
+const MASK = '******'
+
+function maskIfSet(value) {
+  return value ? MASK : ''
+}
+
 export async function onRequestGet(context) {
-  let accessPassword = ''
+  let cosSecretId = ''
+  let cosSecretKey = ''
+  let cosRegion = ''
   let cdnDomain = ''
-  let source = 'kv'
+  let kvAvailable = true
 
   try {
-    const kvPassword = await coshub_kv.get('access_password')
-    if (kvPassword) {
-      accessPassword = '******'
-    } else {
-      accessPassword = context.env.ACCESS_PASSWORD ? '******' : ''
-      if (!kvPassword) source = 'env'
-    }
+    cosSecretId = await coshub_kv.get('cos_secret_id') || ''
+    cosSecretKey = await coshub_kv.get('cos_secret_key') || ''
+    cosRegion = await coshub_kv.get('cos_region') || ''
+    cdnDomain = await coshub_kv.get('cos_cdn_domain') || ''
   } catch {
-    accessPassword = context.env.ACCESS_PASSWORD ? '******' : ''
-    source = 'env'
-  }
-
-  try {
-    const kvCdn = await coshub_kv.get('cos_cdn_domain')
-    if (kvCdn) {
-      cdnDomain = kvCdn
-    } else {
-      cdnDomain = context.env.COS_CDN_DOMAIN || ''
-      if (!kvCdn && source === 'kv') source = 'env'
-    }
-  } catch {
-    cdnDomain = context.env.COS_CDN_DOMAIN || ''
-    source = 'env'
+    kvAvailable = false
   }
 
   return jsonResponse({
     success: true,
     data: {
-      kvAvailable: true,
-      accessPassword,
+      kvAvailable,
+      cosSecretId: maskIfSet(cosSecretId),
+      cosSecretKey: maskIfSet(cosSecretKey),
+      cosRegion,
       cdnDomain,
-      source,
     },
     error: null,
   })
@@ -53,9 +45,19 @@ export async function onRequestPut(context) {
     const body = await context.request.json()
     const updates = {}
 
-    if (body.accessPassword && typeof body.accessPassword === 'string' && body.accessPassword !== '******') {
-      await coshub_kv.put('access_password', body.accessPassword)
-      updates.accessPassword = '******'
+    if (body.cosSecretId && typeof body.cosSecretId === 'string' && body.cosSecretId !== MASK) {
+      await coshub_kv.put('cos_secret_id', body.cosSecretId)
+      updates.cosSecretId = MASK
+    }
+
+    if (body.cosSecretKey && typeof body.cosSecretKey === 'string' && body.cosSecretKey !== MASK) {
+      await coshub_kv.put('cos_secret_key', body.cosSecretKey)
+      updates.cosSecretKey = MASK
+    }
+
+    if (body.cosRegion !== undefined && typeof body.cosRegion === 'string') {
+      await coshub_kv.put('cos_region', body.cosRegion)
+      updates.cosRegion = body.cosRegion
     }
 
     if (body.cdnDomain !== undefined && typeof body.cdnDomain === 'string') {
@@ -68,7 +70,7 @@ export async function onRequestPut(context) {
       data: updates,
       error: null,
     })
-  } catch (err) {
+  } catch {
     return jsonResponse({ success: false, data: null, error: '保存设置失败' }, 500)
   }
 }

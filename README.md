@@ -4,9 +4,9 @@ A modern, high-performance web management panel for Tencent Cloud COS (Cloud Obj
 
 一个现代化、高性能的腾讯云 COS 对象存储 Web 管理面板。
 
-|                                                                                                                                                                   Global / 国际版                                                                                                                                                                   |                                                                                                                                                                                       China / 国内版                                                                                                                                                                                       |
-| :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| [![Deploy to EdgeOne Pages](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?repository-url=https%3A%2F%2Fgithub.com%2FYoungLee-coder%2FCosHub&env=COS_SECRET_ID,COS_SECRET_KEY,COS_REGION,ACCESS_PASSWORD,AUTH_SECRET&env-description=COS%20configuration%20and%20authentication%20environment%20variables) | [![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://console.cloud.tencent.com/edgeone/pages/new?repository-url=https%3A%2F%2Fgithub.com%2FYoungLee-coder%2FCosHub&env=COS_SECRET_ID,COS_SECRET_KEY,COS_REGION,ACCESS_PASSWORD,AUTH_SECRET&env-description=COS%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%AE%A4%E8%AF%81%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F) |
+|                                                                                                                              Global / 国际版                                                                                                                              |                                                                                                                                                    China / 国内版                                                                                                                                                    |
+| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| [![Deploy to EdgeOne Pages](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?repository-url=https%3A%2F%2Fgithub.com%2FYoungLee-coder%2FCosHub&env=ACCESS_PASSWORD,AUTH_SECRET&env-description=Required%20environment%20variables) | [![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://console.cloud.tencent.com/edgeone/pages/new?repository-url=https%3A%2F%2Fgithub.com%2FYoungLee-coder%2FCosHub&env=ACCESS_PASSWORD,AUTH_SECRET&env-description=%E5%BF%85%E9%85%8D%E7%8E%AF%E5%9F%83%E5%8F%98%E9%87%8F) |
 
 ## Features / 功能特性
 
@@ -19,7 +19,7 @@ A modern, high-performance web management panel for Tencent Cloud COS (Cloud Obj
 - **Batch Operations / 批量操作** - Select and delete multiple files
 - **Custom CDN Domain / 自定义 CDN 域名** - Support custom domain for file links
 - **Copy Link / 复制链接** - Quick copy file URL to clipboard
-- **Web Settings / 在线设置** - Configure password and CDN domain via EdgeOne KV storage
+- **Web Settings / 在线设置** - Configure COS credentials and CDN domain via KV
 
 ## Tech Stack / 技术栈
 
@@ -40,44 +40,60 @@ A modern, high-performance web management panel for Tencent Cloud COS (Cloud Obj
 pnpm install
 ```
 
-### 2. Configure Environment / 配置环境变量
+### 2. Configure Environment Variables / 配置环境变量
 
-Set environment variables in EdgeOne Pages Console → Your Project → Settings → Environment Variables:
+Set the two required environment variables in EdgeOne Pages Console → Your Project → Settings → Environment Variables:
 
-在 EdgeOne Pages 控制台 → 你的项目 → 设置 → 环境变量中配置：
+在 EdgeOne Pages 控制台 → 你的项目 → 设置 → 环境变量中配置两个必填项：
 
 ```env
-# COS Configuration / COS 配置
-COS_SECRET_ID=your_secret_id
-COS_SECRET_KEY=your_secret_key
-COS_REGION=ap-guangzhou
-
-# Custom CDN Domain (optional) / 自定义 CDN 域名（可选）
-COS_CDN_DOMAIN=https://cdn.example.com
-
-# Authentication / 认证配置
 ACCESS_PASSWORD=your_access_password
 AUTH_SECRET=your_random_secret_string_at_least_32_chars
 ```
 
-For local development, create `.env.local` in the project root with the same variables.
+| Variable / 变量   | Required / 必填 | Description / 说明                            |
+| ----------------- | --------------- | --------------------------------------------- |
+| `ACCESS_PASSWORD` | Yes / 是        | Login password / 登录密码                     |
+| `AUTH_SECRET`     | Yes / 是        | JWT signing secret (32+ chars) / JWT 签名密钥 |
 
-本地开发时，在项目根目录创建 `.env.local` 文件填写相同变量。
+### 3. Bind EdgeOne KV / 绑定 EdgeOne KV
 
-### 3. Run Development Server / 启动开发服务器
+COS credentials and CDN domain are stored in EdgeOne KV (modifiable via Web Settings). Bind a KV namespace:
+
+COS 凭证和 CDN 域名存储在 EdgeOne KV 中（可通过在线设置修改）。绑定 KV namespace：
+
+1. Go to EdgeOne Pages Console → Your Project → Settings → KV Namespace Binding
+2. 进入 EdgeOne Pages 控制台 → 你的项目 → 设置 → KV Namespace 绑定
+3. Create or select a KV namespace, set the binding variable name to `coshub_kv`
+4. 创建或选择一个 KV namespace，将绑定变量名设为 `coshub_kv`
+
+### 4. Configure COS via Web Settings / 通过在线设置配置 COS
+
+After deployment, log in and go to Settings to configure COS credentials and CDN domain. Alternatively, set them directly in the EdgeOne KV Console.
+
+部署后登录并进入设置页面配置 COS 凭证和 CDN 域名。也可直接在 EdgeOne KV 控制台中写入。
+
+| KV Key           | Required / 必填 | Description / 说明                         |
+| ---------------- | --------------- | ------------------------------------------ |
+| `cos_secret_id`  | Yes / 是        | Tencent Cloud SecretId / 腾讯云 SecretId   |
+| `cos_secret_key` | Yes / 是        | Tencent Cloud SecretKey / 腾讯云 SecretKey |
+| `cos_region`     | Yes / 是        | COS Region (e.g. ap-guangzhou) / COS 地域  |
+| `cos_cdn_domain` | No / 否         | Custom CDN domain / 自定义 CDN 域名        |
+
+### 5. Run Development Server / 启动开发服务器
 
 ```bash
 pnpm dev           # EdgeOne Pages local dev server
 pnpm dev:frontend  # Vite dev server (frontend only)
 ```
 
-### 4. Build for Production / 构建生产版本
+### 6. Build for Production / 构建生产版本
 
 ```bash
 pnpm build
 ```
 
-### 5. Code Quality / 代码质量检查
+### 7. Code Quality / 代码质量检查
 
 ```bash
 pnpm lint
@@ -89,38 +105,29 @@ Pre-commit checks are powered by Husky + lint-staged after dependencies are inst
 
 安装依赖后会启用 Husky + lint-staged，在提交前执行最小质量检查。
 
-## Environment Variables / 环境变量说明
-
-| Variable / 变量   | Required / 必填 | Description / 说明                         |
-| ----------------- | --------------- | ------------------------------------------ |
-| `COS_SECRET_ID`   | Yes / 是        | Tencent Cloud SecretId / 腾讯云 SecretId   |
-| `COS_SECRET_KEY`  | Yes / 是        | Tencent Cloud SecretKey / 腾讯云 SecretKey |
-| `COS_REGION`      | Yes / 是        | COS Region (e.g. ap-guangzhou) / COS 地域  |
-| `COS_CDN_DOMAIN`  | No / 否         | Custom CDN domain / 自定义 CDN 域名        |
-| `ACCESS_PASSWORD` | Yes / 是        | Login password / 登录密码                  |
-| `AUTH_SECRET`     | Yes / 是        | JWT secret (32+ chars) / JWT 密钥          |
-
 ## Configuration / 配置管理
 
-CosHub settings are managed through environment variables in EdgeOne Pages Console.
+CosHub separates configuration into two sources — they do not overlap:
 
-CosHub 的设置通过 EdgeOne Pages 控制台的环境变量管理。
+CosHub 的配置分为两个来源，两者不重叠：
 
-### How to Configure / 如何配置
+| Source / 来源 | Variables / 变量                                                  | How to modify / 如何修改                      | Need redeploy / 需重新部署 |
+| ------------- | ----------------------------------------------------------------- | --------------------------------------------- | -------------------------- |
+| Environment   | `ACCESS_PASSWORD`, `AUTH_SECRET`                                  | EdgeOne Pages Console → Environment Variables | Yes / 是                   |
+| EdgeOne KV    | `cos_secret_id`, `cos_secret_key`, `cos_region`, `cos_cdn_domain` | Web Settings page or KV Console               | No / 否                    |
 
-1. Go to EdgeOne Pages Console → Your Project → Settings → Environment Variables
-2. 进入 EdgeOne Pages 控制台 → 你的项目 → 设置 → 环境变量
-3. Add or update the following variables / 添加或更新以下变量：
-   - `ACCESS_PASSWORD` - Login password / 登录密码
-   - `COS_CDN_DOMAIN` - Custom CDN domain / 自定义 CDN 域名
-4. Redeploy to apply changes / 重新部署以应用更改
+### Web Settings / 在线设置
 
-### Note on EdgeOne KV / 关于 EdgeOne KV
+1. Log in to CosHub → Settings page
+2. 登录 CosHub → 设置页面
+3. Configure COS SecretId, SecretKey, Region, and CDN domain
+4. 配置 COS SecretId、SecretKey、地域和 CDN 域名
+5. Changes apply immediately / 更改立即生效
 
-EdgeOne KV storage is used for web settings (password and CDN domain). In EdgeOne Pages projects, KV namespace bindings are injected into the Edge Functions' `env` object.
+Secret fields are masked as `******`. Enter a new value to update; leave blank to keep the existing value.
 
-EdgeOne KV 存储用于 Web 设置（密码和 CDN 域名）。在 EdgeOne Pages 项目中，KV namespace 绑定会注入到 Edge Functions 的 `env` 对象中。
+密钥字段掩码显示为 `******`。输入新值即可更新，留空则保持不变。
 
-## License / 许可证
+## License
 
 MIT

@@ -29,7 +29,9 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [data, setData] = useState<SettingsResponse | null>(null)
-  const [newPassword, setNewPassword] = useState('')
+  const [cosSecretId, setCosSecretId] = useState('')
+  const [cosSecretKey, setCosSecretKey] = useState('')
+  const [cosRegion, setCosRegion] = useState('')
   const [cdnDomain, setCdnDomain] = useState('')
 
   useEffect(() => {
@@ -43,8 +45,10 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
     try {
       const result = await getSettings()
       setData(result)
+      setCosSecretId('')
+      setCosSecretKey('')
+      setCosRegion(result.cosRegion)
       setCdnDomain(result.cdnDomain)
-      setNewPassword('')
     } catch {
       toast.error('加载设置失败')
     } finally {
@@ -56,11 +60,14 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
     setSaving(true)
     try {
       await updateSettings({
-        accessPassword: newPassword || undefined,
+        cosSecretId: cosSecretId || undefined,
+        cosSecretKey: cosSecretKey || undefined,
+        cosRegion,
         cdnDomain,
       })
       toast.success('设置已保存')
-      setNewPassword('')
+      setCosSecretId('')
+      setCosSecretKey('')
       await loadSettings()
     } catch {
       toast.error('保存设置失败')
@@ -85,7 +92,7 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>设置</DialogTitle>
-          <DialogDescription>管理应用配置，KV 存储的配置优先于环境变量</DialogDescription>
+          <DialogDescription>COS 配置通过 KV 存储，修改即时生效无需重新部署</DialogDescription>
         </DialogHeader>
 
         {loading ? (
@@ -95,24 +102,53 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
         ) : data ? (
           <>
             <div className="space-y-4">
-              <div className="rounded-md bg-green-50 p-3 text-sm text-green-800">
-                <p className="font-medium mb-1">配置来源: KV 存储</p>
-                <p>修改配置即时生效，无需重新部署</p>
+              <div className="rounded-md bg-neutral-100 p-3 text-sm text-neutral-600">
+                <p className="font-medium">环境变量（不可在此修改，需在 EdgeOne 控制台配置）</p>
+                <p className="mt-1">ACCESS_PASSWORD · AUTH_SECRET</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">访问密码</Label>
+                <Label htmlFor="cosSecretId">COS SecretId</Label>
                 <Input
-                  id="password"
+                  id="cosSecretId"
                   type="password"
-                  placeholder="输入新密码以更新"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder={
+                    data.cosSecretId ? '已设置，输入新值以更新' : '未设置，请输入 SecretId'
+                  }
+                  value={cosSecretId}
+                  onChange={(e) => setCosSecretId(e.target.value)}
                 />
                 <p className="text-xs text-neutral-500">
-                  当前状态：{data.accessPassword ? '已设置' : '未设置'}
-                  {data.source === 'env' && ' (来自环境变量)'}
+                  当前状态：{data.cosSecretId ? '已设置' : '未设置'}
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cosSecretKey">COS SecretKey</Label>
+                <Input
+                  id="cosSecretKey"
+                  type="password"
+                  placeholder={
+                    data.cosSecretKey ? '已设置，输入新值以更新' : '未设置，请输入 SecretKey'
+                  }
+                  value={cosSecretKey}
+                  onChange={(e) => setCosSecretKey(e.target.value)}
+                />
+                <p className="text-xs text-neutral-500">
+                  当前状态：{data.cosSecretKey ? '已设置' : '未设置'}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cosRegion">COS Region</Label>
+                <Input
+                  id="cosRegion"
+                  type="text"
+                  placeholder="例如：ap-guangzhou"
+                  value={cosRegion}
+                  onChange={(e) => setCosRegion(e.target.value)}
+                />
+                <p className="text-xs text-neutral-500">默认值：ap-guangzhou</p>
               </div>
 
               <div className="space-y-2">

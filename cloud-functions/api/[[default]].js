@@ -4,15 +4,21 @@ import COS from 'cos-nodejs-sdk-v5'
 const app = express()
 app.use(express.json())
 
-function createCosClient() {
-  return new COS({
-    SecretId: process.env.COS_SECRET_ID,
-    SecretKey: process.env.COS_SECRET_KEY,
-  })
+function createCosClient(req) {
+  const secretId = req.headers['x-coshub-cos-secret-id']
+  const secretKey = req.headers['x-coshub-cos-secret-key']
+  if (!secretId || !secretKey) {
+    return null
+  }
+  return new COS({ SecretId: secretId, SecretKey: secretKey })
 }
 
-function getRegion() {
-  return process.env.COS_REGION || 'ap-guangzhou'
+function getRegion(req) {
+  return req.headers['x-coshub-cos-region'] || 'ap-guangzhou'
+}
+
+function getCdnDomain(req) {
+  return req.headers['x-coshub-cos-cdn-domain'] || ''
 }
 
 function successRes(res, data) {
@@ -25,7 +31,10 @@ function errorRes(res, status, message) {
 
 app.get('/cos/buckets', async (_req, res) => {
   try {
-    const cos = createCosClient()
+    const cos = createCosClient(_req)
+    if (!cos) {
+      return errorRes(res, 500, 'COS 凭证未配置，请在设置中配置 SecretId 和 SecretKey')
+    }
     const result = await new Promise((resolve, reject) => {
       cos.getService({}, (err, data) => {
         if (err) reject(err)
@@ -43,8 +52,8 @@ app.get('/cos/buckets', async (_req, res) => {
   }
 })
 
-app.get('/cos/cdn-domain', (_req, res) => {
-  const cdnDomain = process.env.COS_CDN_DOMAIN || ''
+app.get('/cos/cdn-domain', (req, res) => {
+  const cdnDomain = getCdnDomain(req)
   successRes(res, { domain: cdnDomain })
 })
 
@@ -56,8 +65,11 @@ app.get('/cos/objects', async (req, res) => {
   }
 
   try {
-    const cos = createCosClient()
-    const region = getRegion()
+    const cos = createCosClient(req)
+    if (!cos) {
+      return errorRes(res, 500, 'COS 凭证未配置，请在设置中配置 SecretId 和 SecretKey')
+    }
+    const region = getRegion(req)
     const result = await new Promise((resolve, reject) => {
       cos.getBucket(
         {
@@ -102,8 +114,11 @@ app.delete('/cos/objects', async (req, res) => {
   }
 
   try {
-    const cos = createCosClient()
-    const region = getRegion()
+    const cos = createCosClient(req)
+    if (!cos) {
+      return errorRes(res, 500, 'COS 凭证未配置，请在设置中配置 SecretId 和 SecretKey')
+    }
+    const region = getRegion(req)
 
     if (keys.length === 1) {
       await new Promise((resolve, reject) => {
@@ -145,8 +160,11 @@ app.put('/cos/objects', async (req, res) => {
   }
 
   try {
-    const cos = createCosClient()
-    const region = getRegion()
+    const cos = createCosClient(req)
+    if (!cos) {
+      return errorRes(res, 500, 'COS 凭证未配置，请在设置中配置 SecretId 和 SecretKey')
+    }
+    const region = getRegion(req)
 
     await new Promise((resolve, reject) => {
       cos.putObjectCopy(
@@ -187,8 +205,11 @@ app.post('/cos/objects', async (req, res) => {
   }
 
   try {
-    const cos = createCosClient()
-    const region = getRegion()
+    const cos = createCosClient(req)
+    if (!cos) {
+      return errorRes(res, 500, 'COS 凭证未配置，请在设置中配置 SecretId 和 SecretKey')
+    }
+    const region = getRegion(req)
     const key = path.endsWith('/') ? path : `${path}/`
 
     await new Promise((resolve, reject) => {
@@ -215,8 +236,11 @@ app.get('/cos/url', async (req, res) => {
   }
 
   try {
-    const cos = createCosClient()
-    const region = getRegion()
+    const cos = createCosClient(req)
+    if (!cos) {
+      return errorRes(res, 500, 'COS 凭证未配置，请在设置中配置 SecretId 和 SecretKey')
+    }
+    const region = getRegion(req)
 
     const url = await new Promise((resolve, reject) => {
       cos.getObjectUrl(
@@ -244,7 +268,7 @@ app.get('/cos/url', async (req, res) => {
 app.post('/cos/url', (req, res) => {
   const { key } = req.body
 
-  let cdnDomain = process.env.COS_CDN_DOMAIN || ''
+  let cdnDomain = getCdnDomain(req)
   if (cdnDomain && !cdnDomain.startsWith('http')) {
     cdnDomain = `https://${cdnDomain}`
   }

@@ -34,7 +34,9 @@ export async function onRequestGet(context) {
     )
   }
 
-  const claims = await verifyJWT(match[1], context.env.AUTH_SECRET)
+  const authSecret = context.env.AUTH_SECRET || ''
+
+  const claims = authSecret ? await verifyJWT(match[1], authSecret) : null
   const authenticated = !!claims?.authenticated
 
   return new Response(

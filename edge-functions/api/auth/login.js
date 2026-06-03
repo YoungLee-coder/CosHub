@@ -37,6 +37,12 @@ export async function onRequestPost(context) {
       return jsonResponse({ success: false, data: null, error: '密码不能为空' }, 400)
     }
 
+    const authSecret = context.env.AUTH_SECRET || ''
+
+    if (!authSecret) {
+      return jsonResponse({ success: false, data: null, error: '系统未配置认证密钥，请设置 AUTH_SECRET 环境变量' }, 500)
+    }
+
     const clientIp =
       context.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
     const rateKey = `rate:login:${clientIp}`
@@ -60,32 +66,21 @@ export async function onRequestPost(context) {
       return jsonResponse({ success: false, data: null, error: '尝试次数过多，请稍后再试' }, 429)
     }
 
-    let storedPassword = null
-    try {
-      storedPassword = await coshub_kv.get('access_password')
-    } catch {
-      // KV read failed, fallback to env
-    }
-
-    const actualPassword = storedPassword || context.env.ACCESS_PASSWORD || ''
+    const actualPassword = context.env.ACCESS_PASSWORD || ''
 
     if (password !== actualPassword) {
       rateData.count++
       try {
         await coshub_kv.put(rateKey, JSON.stringify(rateData))
-      } catch {
-        // KV write failed
-      }
+      } catch {}
       return jsonResponse({ success: false, data: null, error: '密码错误' }, 401)
     }
 
     try {
       await coshub_kv.put(rateKey, JSON.stringify({ count: 0, windowStart: Date.now() }))
-    } catch {
-      // KV write failed
-    }
+    } catch {}
 
-    const token = await signJWT({ authenticated: true }, context.env.AUTH_SECRET, 7 * 24 * 3600)
+    const token = await signJWT({ authenticated: true }, authSecret, 7 * 24 * 3600)
 
     return new Response(
       JSON.stringify({ success: true, data: { authenticated: true }, error: null }),
