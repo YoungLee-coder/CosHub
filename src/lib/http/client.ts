@@ -1,5 +1,3 @@
-import { mockRequest } from '@/mocks/handlers'
-
 interface ApiResponse<T> {
   success: boolean
   data: T | null
@@ -29,6 +27,7 @@ async function parseResponse<T>(response: Response): Promise<ApiResponse<T> | nu
 
 async function fetchWithMock(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+    const { mockRequest } = await import('@/mocks/handlers')
     const url = typeof input === 'string' ? input : input.toString()
     const mocked = await mockRequest(url, new Request(url, init))
     if (mocked) {
