@@ -34,7 +34,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Folder,
   File,
@@ -47,8 +55,7 @@ import {
   Search,
   Loader2,
   Eye,
-  ArrowUp,
-  ArrowDown,
+  ArrowUpDown,
   Copy,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -158,22 +165,18 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
     {
       id: 'select',
       header: ({ table }) => (
-        <input
-          type="checkbox"
+        <Checkbox
           checked={table.getIsAllRowsSelected()}
-          onChange={table.getToggleAllRowsSelectedHandler()}
-          className="rounded border-neutral-300"
+          onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
         />
       ),
       cell: ({ row }) => (
-        <input
-          type="checkbox"
+        <Checkbox
           checked={row.getIsSelected()}
-          onChange={row.getToggleSelectedHandler()}
-          className="rounded border-neutral-300"
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
         />
       ),
-      size: 40,
+      size: 36,
     },
     {
       accessorKey: 'name',
@@ -193,7 +196,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
             className={`flex items-center gap-2 ${file.isFolder ? 'hover:text-neutral-600 cursor-pointer' : ''}`}
           >
             <Icon
-              className={`w-4 h-4 ${file.isFolder ? 'text-neutral-700' : 'text-neutral-400'}`}
+              className={`w-4 h-4 shrink-0 ${file.isFolder ? 'text-neutral-500' : 'text-neutral-400'}`}
             />
             <span className="truncate max-w-xs">{file.name}</span>
           </button>
@@ -203,31 +206,35 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
     {
       accessorKey: 'size',
       header: '大小',
-      cell: ({ row }) => (row.original.isFolder ? '-' : formatFileSize(row.original.size)),
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {row.original.isFolder ? '-' : formatFileSize(row.original.size)}
+        </span>
+      ),
     },
     {
       accessorKey: 'lastModified',
       header: ({ column }) => {
         const isSorted = column.getIsSorted()
         return (
-          <div className="flex items-center gap-1">
-            <span>修改时间</span>
-            <button
-              onClick={() => column.toggleSorting(isSorted === 'asc')}
-              className="p-0.5 rounded hover:bg-neutral-200 transition-colors"
-            >
-              {isSorted === 'asc' ? (
-                <ArrowUp className="w-3.5 h-3.5 text-neutral-900" />
-              ) : isSorted === 'desc' ? (
-                <ArrowDown className="w-3.5 h-3.5 text-neutral-900" />
-              ) : (
-                <ArrowUp className="w-3.5 h-3.5 text-neutral-400" />
-              )}
-            </button>
-          </div>
+          <button
+            onClick={() => column.toggleSorting(isSorted === 'asc')}
+            className="flex items-center gap-1 -ml-1 group"
+          >
+            <span className="text-muted-foreground group-hover:text-foreground transition-colors">
+              修改时间
+            </span>
+            <ArrowUpDown
+              className={`h-3 w-3 transition-colors ${isSorted ? 'text-foreground' : 'text-muted-foreground/50 group-hover:text-muted-foreground'}`}
+            />
+          </button>
         )
       },
-      cell: ({ row }) => (row.original.lastModified ? formatDate(row.original.lastModified) : '-'),
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">
+          {row.original.lastModified ? formatDate(row.original.lastModified) : '-'}
+        </span>
+      ),
       sortingFn: (rowA, rowB) => {
         const a = rowA.original.lastModified ? new Date(rowA.original.lastModified).getTime() : 0
         const b = rowB.original.lastModified ? new Date(rowB.original.lastModified).getTime() : 0
@@ -243,7 +250,11 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -268,7 +279,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => deleteMutation.mutate(file.key)}
-                className="text-red-600"
+                className="text-destructive"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 删除
@@ -277,7 +288,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
           </DropdownMenu>
         )
       },
-      size: 50,
+      size: 36,
     },
   ]
 
@@ -296,43 +307,44 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
   const selectedCount = Object.values(rowSelection).filter(Boolean).length
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
-      <div className="flex shrink-0 items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+    <div className="h-full flex flex-col min-h-0 p-4 lg:px-6">
+      <div className="flex shrink-0 items-center gap-3 pb-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <Input
             placeholder="搜索文件..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-9 border-neutral-300"
+            className="h-8 pl-8 text-xs"
           />
         </div>
         {selectedCount > 0 && (
           <Button
             variant="destructive"
             size="sm"
+            className="h-8"
             onClick={handleBatchDelete}
             disabled={batchDeleteMutation.isPending}
           >
             {batchDeleteMutation.isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
             ) : (
-              <Trash2 className="w-4 h-4 mr-2" />
+              <Trash2 className="mr-1.5 size-3.5" />
             )}
             删除 ({selectedCount})
           </Button>
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full caption-bottom text-sm">
-          <TableHeader className="sticky top-0 z-10 bg-background">
+      <div className="flex-1 overflow-auto rounded-lg border min-h-0">
+        <Table>
+          <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-neutral-200 hover:bg-transparent">
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="sticky top-0 z-10 bg-background text-neutral-600"
+                    className="text-xs font-medium text-muted-foreground h-9"
                   >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
@@ -343,19 +355,19 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  <Loader2 className="w-6 h-6 mx-auto animate-spin text-neutral-400" />
+                <TableCell colSpan={5} className="h-24 text-center">
+                  <Loader2 className="mx-auto size-4 animate-spin text-muted-foreground" />
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-neutral-500">
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                   暂无文件
                 </TableCell>
               </TableRow>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="border-neutral-200 hover:bg-neutral-50">
+                <TableRow key={row.id} className="group">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -365,7 +377,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
               ))
             )}
           </TableBody>
-        </table>
+        </Table>
       </div>
 
       <Dialog
@@ -386,7 +398,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
               取消
             </Button>
             <Button onClick={confirmRename} disabled={renameMutation.isPending}>
-              {renameMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}确认
+              {renameMutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}确认
             </Button>
           </DialogFooter>
         </DialogContent>

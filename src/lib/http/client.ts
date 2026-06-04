@@ -1,3 +1,5 @@
+import { mockRequest } from '@/mocks/handlers'
+
 interface ApiResponse<T> {
   success: boolean
   data: T | null
@@ -25,12 +27,23 @@ async function parseResponse<T>(response: Response): Promise<ApiResponse<T> | nu
   }
 }
 
+async function fetchWithMock(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+    const url = typeof input === 'string' ? input : input.toString()
+    const mocked = await mockRequest(url, new Request(url, init))
+    if (mocked) {
+      return mocked
+    }
+  }
+  return fetch(input, init)
+}
+
 export async function requestJson<T>(
   input: RequestInfo | URL,
   options: RequestJsonOptions = {}
 ): Promise<T> {
   const { fallbackMessage = 'Request failed', ...init } = options
-  const response = await fetch(input, init)
+  const response = await fetchWithMock(input, init)
   const body = await parseResponse<T>(response)
 
   if (!response.ok || !body?.success) {
@@ -47,7 +60,7 @@ export async function requestEnvelope<T>(
   status: number
   body: ApiResponse<T> | null
 }> {
-  const response = await fetch(input, init)
+  const response = await fetchWithMock(input, init)
   const body = await parseResponse<T>(response)
   return {
     status: response.status,

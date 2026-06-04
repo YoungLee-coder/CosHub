@@ -1,7 +1,6 @@
 'use client'
 
 import { LayoutGrid, List } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export type ViewMode = 'list' | 'grid'
 
@@ -12,25 +11,21 @@ interface ViewToggleProps {
 
 export function ViewToggle({ mode, onChange }: ViewToggleProps) {
   return (
-    <div className="flex items-center rounded-md border">
-      <Button
-        variant="ghost"
-        size="sm"
-        className={`h-8 rounded-none border-r px-2 ${mode === 'list' ? 'bg-muted' : ''}`}
+    <div className="flex items-center">
+      <button
         onClick={() => onChange('list')}
+        className={`size-8 flex items-center justify-center rounded-md transition-colors ${mode === 'list' ? 'text-neutral-900 bg-neutral-100' : 'text-neutral-400 hover:text-neutral-600'}`}
         title="列表视图"
       >
         <List className="size-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={`h-8 rounded-none px-2 ${mode === 'grid' ? 'bg-muted' : ''}`}
+      </button>
+      <button
         onClick={() => onChange('grid')}
+        className={`size-8 flex items-center justify-center rounded-md transition-colors ${mode === 'grid' ? 'text-neutral-900 bg-neutral-100' : 'text-neutral-400 hover:text-neutral-600'}`}
         title="网格视图"
       >
         <LayoutGrid className="size-4" />
-      </Button>
+      </button>
     </div>
   )
 }

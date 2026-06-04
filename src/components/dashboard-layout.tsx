@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useQueryState } from 'nuqs'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
-import { AppSidebar } from './app-sidebar'
 import { Separator } from '@/components/ui/separator'
+import { AppSidebar } from './app-sidebar'
 import { BreadcrumbNav } from './breadcrumb-nav'
 import { ViewToggle, type ViewMode } from './view-toggle'
 import { FileTable } from './file-table'
@@ -65,51 +65,50 @@ export function DashboardLayout() {
   }
 
   return (
-    <SidebarProvider className="h-svh overflow-hidden">
+    <SidebarProvider>
       <AppSidebar selectedBucket={bucket} onSelectBucket={handleSelectBucket} />
-      <SidebarInset className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <SidebarInset>
         {bucket ? (
           <>
-            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-              <div className="flex items-center gap-2">
+            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background/90 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+              <div className="flex w-full items-center gap-2 px-4 lg:px-6">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
-              </div>
-              <div className="flex flex-1 items-center justify-between gap-2 overflow-hidden">
                 <BreadcrumbNav bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
-                <div className="flex items-center gap-2">
+                <div className="ml-auto flex items-center gap-2">
                   <ViewToggle mode={viewMode} onChange={setViewMode} />
-                  <Button size="sm" onClick={() => setUploadDialog(true)}>
-                    <Upload className="size-4" />
-                    <span className="ml-2 hidden sm:inline">上传</span>
+                  <Button
+                    size="sm"
+                    className="hidden h-7 sm:flex"
+                    onClick={() => setUploadDialog(true)}
+                  >
+                    <Upload className="size-3.5" />
+                    <span className="ml-1.5">上传</span>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setNewFolderDialog(true)}>
-                    <FolderPlus className="size-4" />
-                    <span className="ml-2 hidden sm:inline">新建文件夹</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="hidden h-7 sm:flex"
+                    onClick={() => setNewFolderDialog(true)}
+                  >
+                    <FolderPlus className="size-3.5" />
+                    <span className="ml-1.5">新建文件夹</span>
                   </Button>
                 </div>
               </div>
             </header>
 
-            <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                {viewMode === 'list' ? (
-                  <FileTable bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
-                ) : (
-                  <FileGrid bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
-                )}
-              </div>
+            <div className="flex flex-1 flex-col overflow-hidden">
+              {viewMode === 'list' ? (
+                <FileTable bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
+              ) : (
+                <FileGrid bucket={bucket} prefix={prefix || ''} onNavigate={handleNavigate} />
+              )}
             </div>
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center p-4">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-xl bg-muted">
-                <FolderPlus className="size-8 text-muted-foreground" />
-              </div>
-              <h2 className="mb-1 text-lg font-medium">选择存储桶</h2>
-              <p className="text-sm text-muted-foreground">从左侧选择一个存储桶开始管理文件</p>
-            </div>
+            <p className="text-sm text-muted-foreground">选择一个存储桶开始</p>
           </div>
         )}
       </SidebarInset>

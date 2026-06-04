@@ -20,6 +20,7 @@ import {
 import { formatFileSize, isImageFile, isVideoFile } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -310,26 +311,19 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
       <div
         key={file.key}
         className={`
-          relative group rounded-lg border bg-white overflow-hidden cursor-pointer
-          transition-all duration-150 hover:shadow-md hover:border-neutral-300
+          relative group rounded-lg border overflow-hidden cursor-pointer
+          transition-colors duration-150 hover:border-neutral-300
           ${isSelected ? 'ring-2 ring-neutral-900 border-neutral-900' : 'border-neutral-200'}
         `}
         style={{ height: CARD_HEIGHT }}
         onClick={() => (file.isFolder ? onNavigate(file.key) : toggleSelect(file.key))}
       >
         {/* 选择框 */}
-        <div
-          className="absolute top-2 left-2 z-10"
-          onClick={(e) => {
-            e.stopPropagation()
-            toggleSelect(file.key)
-          }}
-        >
-          <input
-            type="checkbox"
+        <div className="absolute top-2 left-2 z-10" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
             checked={isSelected}
-            onChange={() => {}}
-            className="w-4 h-4 rounded border-neutral-300 opacity-0 group-hover:opacity-100 checked:opacity-100 transition-opacity"
+            onCheckedChange={() => toggleSelect(file.key)}
+            className={`${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}
           />
         </div>
 
@@ -340,8 +334,8 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 bg-white/80 hover:bg-white shadow-sm"
+                  size="icon"
+                  className="size-7 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreVertical className="w-4 h-4" />
@@ -379,7 +373,7 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
         )}
 
         {/* 缩略图/图标区域 */}
-        <div className="h-[130px] flex items-center justify-center bg-neutral-50 overflow-hidden">
+        <div className="h-[130px] flex items-center justify-center bg-neutral-50/50 overflow-hidden">
           {thumbnailUrl ? (
             <img
               src={thumbnailUrl}
@@ -396,11 +390,11 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
         </div>
 
         {/* 文件信息 */}
-        <div className="p-3">
-          <p className="text-sm font-medium text-neutral-900 truncate" title={file.name}>
+        <div className="p-2.5">
+          <p className="text-[13px] font-medium text-neutral-900 truncate" title={file.name}>
             {file.name}
           </p>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="text-[12px] text-neutral-500 mt-0.5">
             {file.isFolder ? '文件夹' : formatFileSize(file.size)}
           </p>
         </div>
@@ -409,22 +403,23 @@ export function FileGrid({ bucket, prefix, onNavigate }: FileGridProps) {
   }
 
   return (
-    <div className="space-y-4 h-full flex flex-col">
+    <div className="h-full flex flex-col min-h-0 p-4 lg:px-6">
       {/* 工具栏 */}
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+      <div className="flex items-center gap-3 flex-shrink-0 pb-3">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
           <Input
             placeholder="搜索文件..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-9 border-neutral-300"
+            className="h-8 pl-8 text-xs"
           />
         </div>
         {selectedKeys.size > 0 && (
           <Button
             variant="destructive"
             size="sm"
+            className="h-8 text-[13px]"
             onClick={handleBatchDelete}
             disabled={batchDeleteMutation.isPending}
           >

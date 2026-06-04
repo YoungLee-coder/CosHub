@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { logout } from '@/features/auth/client/auth.api'
 import { getBuckets } from '@/features/cos/client/cos.api'
-import { Database, LogOut, Loader2, FolderOpen, Settings } from 'lucide-react'
+import { LogOut, Loader2, Settings } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -45,14 +45,8 @@ export function AppSidebar({ selectedBucket, onSelectBucket }: AppSidebarProps) 
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
-                <div className="flex items-center gap-3">
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <Database className="size-4" />
-                  </div>
-                  <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-semibold">CosHub</span>
-                    <span className="text-xs">COS 管理面板</span>
-                  </div>
+                <div className="flex items-center">
+                  <span className="font-semibold text-[15px]">CosHub</span>
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -64,8 +58,8 @@ export function AppSidebar({ selectedBucket, onSelectBucket }: AppSidebarProps) 
             <SidebarGroupLabel>存储桶</SidebarGroupLabel>
             <SidebarGroupContent>
               {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
                 </div>
               ) : buckets?.length === 0 ? (
                 <p className="px-2 py-4 text-sm text-muted-foreground">暂无存储桶</p>
@@ -77,7 +71,6 @@ export function AppSidebar({ selectedBucket, onSelectBucket }: AppSidebarProps) 
                         isActive={selectedBucket === bucket.Name}
                         onClick={() => onSelectBucket(bucket.Name!)}
                       >
-                        <FolderOpen className="size-4" />
                         <span>{bucket.Name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
