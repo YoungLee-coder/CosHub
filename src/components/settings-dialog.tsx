@@ -4,7 +4,6 @@ import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -92,7 +91,6 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>设置</DialogTitle>
-          <DialogDescription>COS 配置通过 KV 存储，修改即时生效无需重新部署</DialogDescription>
         </DialogHeader>
 
         {loading ? (
@@ -102,11 +100,6 @@ export function SettingsDialog({ open: controlledOpen, onOpenChange }: SettingsD
         ) : data ? (
           <>
             <div className="space-y-4">
-              <div className="rounded-md bg-neutral-100 p-3 text-sm text-neutral-600">
-                <p className="font-medium">环境变量（不可在此修改，需在 EdgeOne 控制台配置）</p>
-                <p className="mt-1">ACCESS_PASSWORD · AUTH_SECRET</p>
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="cosSecretId">COS SecretId</Label>
                 <Input
