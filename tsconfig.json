@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["node"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -15,8 +16,7 @@
     "incremental": true,
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "baseUrl": "."
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.mts"],
   "exclude": ["node_modules", "dist"]

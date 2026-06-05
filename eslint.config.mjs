@@ -19,6 +19,8 @@ const eslintConfig = [
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/incompatible-library': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
   },

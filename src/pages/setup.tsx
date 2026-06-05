@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -8,68 +8,66 @@ import { Label } from '@/components/ui/label'
 import { Lock, Loader2, AlertTriangle, Server } from 'lucide-react'
 import { toast } from 'sonner'
 import { checkInit } from '@/features/init/client/init.api'
-import type { InitStatus } from '@/features/init/client/init.api'
 import { login, checkAuth } from '@/features/auth/client/auth.api'
 import { getSettings, updateSettings } from '@/features/settings/client/settings.api'
-import type { SettingsResponse } from '@/features/settings/client/settings.api'
 
 type SetupStep = 'checking' | 'env-missing' | 'login' | 'cos-config'
 
 export function SetupPage() {
-  const [step, setStep] = useState<SetupStep>('checking')
-  const [initStatus, setInitStatus] = useState<InitStatus | null>(null)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [cosSecretId, setCosSecretId] = useState('')
   const [cosSecretKey, setCosSecretKey] = useState('')
-  const [cosRegion, setCosRegion] = useState('ap-guangzhou')
-  const [settingsData, setSettingsData] = useState<SettingsResponse | null>(null)
+  const [localCosRegion, setLocalCosRegion] = useState<string | null>(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const loadSettings = useCallback(async () => {
-    try {
-      const result = await getSettings()
-      setSettingsData(result)
-      setCosRegion(result.cosRegion || 'ap-guangzhou')
-    } catch {
-      setSettingsData(null)
-    }
-  }, [])
+  const initQuery = useQuery({ queryKey: ['init'], queryFn: checkInit })
 
-  const loadInitStatus = useCallback(async () => {
-    try {
-      const status = await checkInit()
-      setInitStatus(status)
-      if (status.initialized) {
-        const authenticated = await checkAuth()
-        if (authenticated) {
-          navigate('/', { replace: true })
-        } else {
-          navigate('/login', { replace: true })
-        }
-        return
-      }
-      if (!status.env.authSecret || !status.env.accessPassword) {
-        setStep('env-missing')
-        return
-      }
-      const authenticated = await checkAuth()
-      if (authenticated) {
-        setStep('cos-config')
-        await loadSettings()
-      } else {
-        setStep('login')
-      }
-    } catch {
-      toast.error('初始化检查失败')
-      setStep('env-missing')
-    }
-  }, [navigate, loadSettings])
+  const needAuthCheck = useMemo(() => {
+    if (!initQuery.data) return false
+    if (initQuery.data.initialized) return true
+    return initQuery.data.env.authSecret && initQuery.data.env.accessPassword
+  }, [initQuery.data])
+
+  const authQuery = useQuery({
+    queryKey: ['auth'],
+    queryFn: checkAuth,
+    enabled: needAuthCheck,
+  })
+
+  const settingsQuery = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSettings,
+    enabled: authQuery.data === true && !initQuery.data?.initialized,
+  })
+
+  const step = useMemo<SetupStep>(() => {
+    if (initQuery.isError) return 'env-missing'
+    if (!initQuery.data) return 'checking'
+    if (initQuery.data.initialized) return 'checking'
+    if (
+      !initQuery.data.env.authSecret ||
+      !initQuery.data.env.accessPassword ||
+      !initQuery.data.kv.available
+    )
+      return 'env-missing'
+    if (!authQuery.data) return 'login'
+    return 'cos-config'
+  }, [initQuery.data, initQuery.isError, authQuery.data])
 
   useEffect(() => {
-    void loadInitStatus()
-  }, [loadInitStatus])
+    if (!initQuery.data?.initialized) return
+    if (authQuery.data === true) {
+      navigate('/', { replace: true })
+    } else if (authQuery.data === false) {
+      navigate('/login', { replace: true })
+    }
+  }, [initQuery.data?.initialized, authQuery.data, navigate])
+
+  const initStatus = initQuery.data
+  const settingsData = settingsQuery.data ?? null
+  const cosRegion = localCosRegion ?? settingsData?.cosRegion ?? 'ap-guangzhou'
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -81,8 +79,6 @@ export function SetupPage() {
         toast.error(result.error)
       } else {
         await queryClient.invalidateQueries({ queryKey: ['auth'] })
-        setStep('cos-config')
-        await loadSettings()
       }
     } catch {
       toast.error('登录失败')
@@ -100,12 +96,7 @@ export function SetupPage() {
         cosRegion,
       })
       toast.success('配置已保存')
-      const status = await checkInit()
-      if (status.initialized) {
-        navigate('/', { replace: true })
-      } else {
-        setInitStatus(status)
-      }
+      await queryClient.invalidateQueries({ queryKey: ['init'] })
     } catch {
       toast.error('保存配置失败')
     } finally {
@@ -160,7 +151,7 @@ export function SetupPage() {
             )}
             <Button
               className="w-full bg-neutral-900 hover:bg-neutral-800 text-white"
-              onClick={() => void loadInitStatus()}
+              onClick={() => queryClient.invalidateQueries({ queryKey: ['init'] })}
             >
               重新检查
             </Button>
@@ -261,7 +252,7 @@ export function SetupPage() {
                   type="text"
                   placeholder="例如：ap-guangzhou"
                   value={cosRegion}
-                  onChange={(e) => setCosRegion(e.target.value)}
+                  onChange={(e) => setLocalCosRegion(e.target.value)}
                   disabled={loading}
                 />
               </div>
