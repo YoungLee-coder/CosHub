@@ -1,5 +1,21 @@
 {
   "buildCommand": "pnpm build",
   "outputDirectory": "./dist",
-  "nodeVersion": "24.5.0"
+  "nodeVersion": "24.5.0",
+  "cloudFunctions": {
+    "nodejs": {
+      "maxDuration": 60
+    }
+  },
+  "headers": {
+    "/assets/*": {
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/*": {
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "strict-origin-when-cross-origin"
+    }
+  }
 }
