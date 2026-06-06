@@ -46,6 +46,14 @@ Env vars: `.env.local` holds `ACCESS_PASSWORD`, `AUTH_SECRET`, `VITE_ENABLE_MOCK
 - API calls live in `features/*/client/*.api.ts` — never scatter fetch logic in pages or components.
 - TypeScript strict mode (`strict: true` in tsconfig) — no implicit any, no unchecked assertions.
 - Commit messages: conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`).
+- EdgeOne Pages 构建环境限制：Node ≥22.11 但 <22.12 时不能使用 Vite 8+（缺少 Rolldown native bindings）；锁定 Vite 6 + plugin-react 5 组合；pnpm 版本需兼容 EdgeOne build env 的 Node 版本（当前 10.12.1 对 Node 22.11）。修改 Vite/pnpm/Node 版本前先查 EdgeOne Pages build env 的实际 Node 版本。
+
+## Hotspot Ownership
+
+- `src/components/ui/sidebar.tsx` — shadcn/ui 生成的 sidebar 原语系统（20+ 可组合子组件 + `useSidebar` hook）。**不要手动拆分或重构** — 通过 `npx shadcn@latest diff sidebar` 检查与 registry 的偏差。修改该文件会破坏 shadcn 更新契约。触碰时运行 `pnpm typecheck`。
+- `src/components/file-grid.tsx` — 文件网格视图（虚拟滚动 + 卡片布局 + 缩略图 + 删除/重命名/预览对话框）。与 `file-table.tsx` 共享约 70-80% 的 mutation/handler/dialog 逻辑。**稳定边界**：`FileGridProps` 接口（`{ bucket, prefix, onNavigate }`）、`useObjects` hook 依赖、`cos.api` mutation 契约。建议将共享的 mutation/handler/dialog 抽取到 `src/features/cos/hooks/` 和 `src/features/cos/components/`，网格布局和虚拟滚动部分保留在本文件。触碰时运行 `pnpm typecheck`，手动验证网格视图。
+- `src/components/file-table.tsx` — 文件表格视图（tanstack/react-table 排序筛选 + 行选择 + 操作菜单）。与 `file-grid.tsx` 共享约 70-80% 的 mutation/handler/dialog 逻辑。**稳定边界**：`FileTableProps` 接口（同 FileGrid）、表格列结构（name, size, lastModified, actions）。同样建议将共享逻辑抽取后，仅保留 tanstack/react-table 配置和表格 JSX 渲染。触碰时运行 `pnpm typecheck`，手动验证表格视图。
+- `cloud-functions/api/[[default]].js` — Express 云函数，所有 COS 操作的单一后端入口（7 个路由：bucket 列表、对象列表、删除、重命名、创建文件夹、签名 URL、CDN URL）。**稳定边界**：路由路径（`/cos/buckets`、`/cos/cdn-domain`、`/cos/objects`、`/cos/url`）、响应信封 `{ success, data, error }`、header 凭据传递模式（`x-coshub-cos-*`）。该文件为纯 JS，`pnpm typecheck` 不覆盖；触碰时通过 `pnpm dev` 手动测试对应 API。
 
 ## Verification
 

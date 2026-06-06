@@ -11,5 +11,24 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "deny": [
+      "Read ~/.ssh/**",
+      "Read ~/.aws/**",
+      "Read ~/.gnupg/**",
+      "Read ~/.config/gh/hosts.yml",
+      "Read .env.local",
+      "Read .env*.local",
+      "Read credentials*",
+      "Read secrets*",
+      "Bash(curl *| sh*)",
+      "Bash(curl *| bash*)",
+      "Bash(wget *| sh*)",
+      "Bash(wget *| bash*)",
+      "Bash(ssh *)",
+      "Bash(scp *)",
+      "Bash(nc *)"
+    ]
   }
 }
