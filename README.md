@@ -1,8 +1,8 @@
 # CosHub
 
-A modern, high-performance web management panel for Tencent Cloud COS (Cloud Object Storage).
+A web management panel for Tencent Cloud COS (Cloud Object Storage).
 
-一个现代化、高性能的腾讯云 COS 对象存储 Web 管理面板。
+腾讯云 COS 对象存储 Web 管理面板。
 
 |                                                                                                                              Global / 国际版                                                                                                                              |                                                                                                                                                    China / 国内版                                                                                                                                                    |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -11,14 +11,14 @@ A modern, high-performance web management panel for Tencent Cloud COS (Cloud Obj
 ## Features / 功能特性
 
 - **Password Protection / 密码保护** - Single password authentication with JWT session
-- **Multi-Bucket Support / 多存储桶支持** - Switch between different buckets easily
+- **Multi-Bucket Support / 多存储桶支持** - Switch between buckets
 - **File Management / 文件管理** - Upload, download, rename, delete files
 - **Folder Navigation / 文件夹导航** - Breadcrumb navigation with URL state sync
-- **File Preview / 文件预览** - Preview images and videos directly
+- **File Preview / 文件预览** - Preview images and videos
 - **Drag & Drop Upload / 拖拽上传** - Upload files with progress indicator
 - **Batch Operations / 批量操作** - Select and delete multiple files
 - **Custom CDN Domain / 自定义 CDN 域名** - Support custom domain for file links
-- **Copy Link / 复制链接** - Quick copy file URL to clipboard
+- **Copy Link / 复制链接** - Copy file URL to clipboard
 - **Web Settings / 在线设置** - Configure COS credentials and CDN domain via KV
 
 ## Tech Stack / 技术栈
