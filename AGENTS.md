@@ -46,7 +46,7 @@ Env vars: `.env.local` holds `ACCESS_PASSWORD`, `AUTH_SECRET`, `VITE_ENABLE_MOCK
 - API calls live in `features/*/client/*.api.ts` — never scatter fetch logic in pages or components.
 - TypeScript strict mode (`strict: true` in tsconfig) — no implicit any, no unchecked assertions.
 - Commit messages: conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`).
-- EdgeOne Pages 构建环境限制：Node ≥22.11 但 <22.12 时不能使用 Vite 8+（缺少 Rolldown native bindings）；锁定 Vite 6 + plugin-react 5 组合；pnpm 版本需兼容 EdgeOne build env 的 Node 版本（当前 10.12.1 对 Node 22.11）。修改 Vite/pnpm/Node 版本前先查 EdgeOne Pages build env 的实际 Node 版本。
+- EdgeOne Pages 构建环境：当前 nodeVersion=24.5.0（见 `edgeone.json`），对应组合 `vite 8 + @vitejs/plugin-react 6 + pnpm 10.12.1` 已验证可构建。若升级 Node 跨大版本，先查 EdgeOne Pages build env 的实际 Node 版本再决定 Vite/plugin-react 组合（Vite 8+ 需 Node ≥22.12 的 Rolldown native bindings）。
 
 ## Hotspot Ownership
 
