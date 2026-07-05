@@ -1,5 +1,5 @@
 ---
-name: implement-feature
+name: coshub-implement-feature
 description: Implement a new feature in CosHub, following project conventions from .ai/ files. Use when asked to add a feature / implement something / build X / 新功能.
 ---
 
@@ -11,7 +11,7 @@ Implement a new feature following the conventions defined in `.ai/`:
 2. **Plan the change**: identify which files to modify, which layers are involved, which conventions apply.
 3. **Implement**: write the code following `.ai/coding-style.md` conventions. Use the helpers and patterns documented there, not raw alternatives.
 4. **Verify**: run the commands from `.ai/workflow.md` Verification section for the change type you made. If there are tests in `.ai/testing.md` for the area you touched, run those too.
-5. **Review**: if the change is non-trivial, invoke the code-reviewer and/or architect subagent before considering it done.
+5. **Review**: if the change is non-trivial, run a code review (bugbot or security-review subagent, or manual review against `.ai/coding-style.md` and `.ai/architecture.md`) before considering it done.
 
 Project-specific instructions:
 

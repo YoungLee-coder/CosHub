@@ -1,0 +1,17 @@
+---
+description: CosHub project context — read .ai/ before non-trivial work
+alwaysApply: true
+---
+
+# CosHub — project context
+
+Project knowledge lives in `.ai/`. **Read the relevant `.ai/` files before non-trivial work** — do not guess commands, conventions, or architecture.
+
+**`.ai/` file index** — listed in `CLAUDE.md` at the repo root (do not duplicate the list here).
+
+Cursor-specific notes:
+- 优先使用 Edit 工具修改已有文件，而非 Write 工具整体重写。
+- 修改 Edge/Cloud Function（JS 文件）后无法自动 typecheck，需手动验证。
+- Personal overrides: create `AGENTS.local.md` or `CLAUDE.local.md` at the repo root (gitignored).
+
+Do not duplicate `.ai/` content here — update `.ai/` files when project knowledge changes.

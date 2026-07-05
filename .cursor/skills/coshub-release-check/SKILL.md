@@ -1,11 +1,11 @@
 ---
-name: release-check
+name: coshub-release-check
 description: Verify release readiness for CosHub — run checks, confirm version, validate deployment config. Use before release / 发布前检查 / release readiness.
 ---
 
 # Release Check
 
-Verify that CosHub is ready for release. Follow the release process defined in `.ai/workflow.md`.
+Verify that CosHub is ready for release.
 
 ## Steps
 
@@ -14,7 +14,7 @@ Verify that CosHub is ready for release. Follow the release process defined in `
 3. **Run format check**: `pnpm format:check` — no errors.
 4. **Build**: `pnpm build` — must succeed. Verify `dist/` output exists.
 5. **Check version**: verify the version number in `package.json` matches the expected release version.
-6. **Security scan**: invoke the `security-auditor` subagent on changes since the last release. Focus on auth endpoints and COS credential handling.
+6. **Security scan**: if `.ai/security.md` exists, run the security-review subagent on changes since the last release tag. Focus on auth endpoints and COS credential handling.
 7. **Check deployment config**: verify `edgeone.json` build command and output directory settings are correct.
 8. **Report**: summarize the results. If any check fails, report what failed and the fix needed before release can proceed.
 
