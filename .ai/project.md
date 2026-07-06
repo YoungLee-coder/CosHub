@@ -5,3 +5,7 @@
 ## Language
 
 使用中文（zh-CN）回应。
+
+## Persistent memory
+
+Shared facts live in `.ai/` files. Add or update via `/coshub-remember` or ask to "remember this." Agents propose saving stable conventions — confirm before writing.

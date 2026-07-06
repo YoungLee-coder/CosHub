@@ -1,4 +1,4 @@
-<!-- ai-init-version: 4 -->
+<!-- ai-init-version: 6 -->
 
 # CosHub — Claude Code Instructions
 
@@ -15,4 +15,5 @@ Claude-specific notes:
 
 - 优先使用 Edit 工具修改已有文件，而非 Write 工具整体重写。
 - 修改 Edge/Cloud Function（JS 文件）后无法自动 typecheck，需手动验证。
+- **Persistent memory:** when you notice a stable convention, command, or gotcha missing from `.ai/`, propose saving it and ask for confirmation before writing. Use `/coshub-remember` or route per `.ai/project.md` Persistent memory section.
 - Put personal overrides in `CLAUDE.local.md` (gitignored).

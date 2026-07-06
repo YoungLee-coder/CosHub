@@ -12,6 +12,7 @@ Project knowledge lives in `.ai/`. **Read the relevant `.ai/` files before non-t
 Cursor-specific notes:
 - 优先使用 Edit 工具修改已有文件，而非 Write 工具整体重写。
 - 修改 Edge/Cloud Function（JS 文件）后无法自动 typecheck，需手动验证。
+- **Persistent memory:** when you notice a stable convention, command, or gotcha missing from `.ai/`, propose saving it and ask for confirmation before writing. Invoke `/coshub-remember` or follow `.ai/project.md` Persistent memory section.
 - Personal overrides: create `AGENTS.local.md` or `CLAUDE.local.md` at the repo root (gitignored).
 
 Do not duplicate `.ai/` content here — update `.ai/` files when project knowledge changes.

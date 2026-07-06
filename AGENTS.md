@@ -1,4 +1,4 @@
-<!-- ai-init-version: 4 -->
+<!-- ai-init-version: 6 -->
 
 # CosHub — opencode Instructions
 
