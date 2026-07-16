@@ -64,12 +64,13 @@ export async function middleware(context) {
   let cosCdnDomain = ''
 
   try {
-    cosSecretId = await coshub_kv.get('cos_secret_id') || ''
-    cosSecretKey = await coshub_kv.get('cos_secret_key') || ''
-    cosRegion = await coshub_kv.get('cos_region') || 'ap-guangzhou'
-    cosCdnDomain = await coshub_kv.get('cos_cdn_domain') || ''
+    cosSecretId = (await coshub_kv.get('cos_secret_id')) || ''
+    cosSecretKey = (await coshub_kv.get('cos_secret_key')) || ''
+    cosRegion = (await coshub_kv.get('cos_region')) || 'ap-guangzhou'
+    cosCdnDomain = (await coshub_kv.get('cos_cdn_domain')) || ''
   } catch {}
 
+  // Always overwrite any client-supplied x-coshub-* with KV values from middleware.
   return context.next({
     headers: {
       'x-auth-user': 'authenticated',

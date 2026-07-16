@@ -74,6 +74,10 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
     open: false,
     file: null,
   })
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; keys: string[] }>({
+    open: false,
+    keys: [],
+  })
   const [newName, setNewName] = useState('')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewType, setPreviewType] = useState<'image' | 'video' | null>(null)
@@ -81,22 +85,14 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
   const { items, isLoading, refetch } = useObjects({ bucket, prefix })
 
   const deleteMutation = useMutation({
-    mutationFn: (key: string) => deleteObjects(bucket, [key]),
-    onSuccess: () => {
-      toast.success('删除成功')
-      refetch()
-    },
-    onError: () => toast.error('删除失败'),
-  })
-
-  const batchDeleteMutation = useMutation({
     mutationFn: (keys: string[]) => deleteObjects(bucket, keys),
-    onSuccess: () => {
-      toast.success('批量删除成功')
+    onSuccess: (_data, keys) => {
+      toast.success(keys.length > 1 ? '批量删除成功' : '删除成功')
+      setDeleteDialog({ open: false, keys: [] })
       setRowSelection({})
       refetch()
     },
-    onError: () => toast.error('批量删除失败'),
+    onError: (_err, keys) => toast.error(keys.length > 1 ? '批量删除失败' : '删除失败'),
   })
 
   const renameMutation = useMutation({
@@ -155,10 +151,20 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
     renameMutation.mutate({ oldKey: renameDialog.file.key, newKey: prefix + newName })
   }
 
+  const requestDelete = (keys: string[]) => {
+    if (keys.length === 0) return
+    setDeleteDialog({ open: true, keys })
+  }
+
+  const confirmDelete = () => {
+    if (deleteDialog.keys.length === 0) return
+    deleteMutation.mutate(deleteDialog.keys)
+  }
+
   const handleBatchDelete = () => {
     const selectedKeys = Object.keys(rowSelection).filter((k) => rowSelection[k])
     const keysToDelete = items.filter((_, i) => selectedKeys.includes(String(i))).map((f) => f.key)
-    if (keysToDelete.length > 0) batchDeleteMutation.mutate(keysToDelete)
+    requestDelete(keysToDelete)
   }
 
   const columns: ColumnDef<FileItem>[] = [
@@ -278,7 +284,7 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
                 重命名
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => deleteMutation.mutate(file.key)}
+                onClick={() => requestDelete([file.key])}
                 className="text-destructive"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -324,13 +330,9 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
             size="sm"
             className="h-8"
             onClick={handleBatchDelete}
-            disabled={batchDeleteMutation.isPending}
+            disabled={deleteMutation.isPending}
           >
-            {batchDeleteMutation.isPending ? (
-              <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="mr-1.5 size-3.5" />
-            )}
+            <Trash2 className="mr-1.5 size-3.5" />
             删除 ({selectedCount})
           </Button>
         )}
@@ -399,6 +401,39 @@ export function FileTable({ bucket, prefix, onNavigate }: FileTableProps) {
             </Button>
             <Button onClick={confirmRename} disabled={renameMutation.isPending}>
               {renameMutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}确认
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => !deleteMutation.isPending && setDeleteDialog({ open, keys: [] })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>确认删除</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {deleteDialog.keys.length > 1
+              ? `确定删除选中的 ${deleteDialog.keys.length} 个对象？此操作不可恢复。`
+              : '确定删除该对象？此操作不可恢复。'}
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialog({ open: false, keys: [] })}
+              disabled={deleteMutation.isPending}
+            >
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+              确认删除
             </Button>
           </DialogFooter>
         </DialogContent>

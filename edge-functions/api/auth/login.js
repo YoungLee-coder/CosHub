@@ -28,6 +28,14 @@ function jsonResponse(body, status = 200) {
   })
 }
 
+/** Prefer platform-trusted IP; never use client-controlled headers. */
+function getClientIp(context) {
+  const eoIp = context.request?.eo?.clientIp
+  if (typeof eoIp === 'string' && eoIp) return eoIp
+  if (typeof context.clientIp === 'string' && context.clientIp) return context.clientIp
+  return 'unknown'
+}
+
 export async function onRequestPost(context) {
   try {
     const body = await context.request.json()
@@ -40,19 +48,21 @@ export async function onRequestPost(context) {
     const authSecret = context.env.AUTH_SECRET || ''
 
     if (!authSecret) {
-      return jsonResponse({ success: false, data: null, error: '系统未配置认证密钥，请设置 AUTH_SECRET 环境变量' }, 500)
+      return jsonResponse(
+        { success: false, data: null, error: '系统未配置认证密钥，请设置 AUTH_SECRET 环境变量' },
+        500
+      )
     }
 
-    const clientIp =
-      context.request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    const clientIp = getClientIp(context)
     const rateKey = `rate:login:${clientIp}`
 
-    let rateData = null
+    let rateData
     try {
       const raw = await coshub_kv.get(rateKey, 'json')
       rateData = raw || { count: 0, windowStart: Date.now() }
     } catch {
-      rateData = { count: 0, windowStart: Date.now() }
+      return jsonResponse({ success: false, data: null, error: '服务暂时不可用，请稍后再试' }, 503)
     }
 
     const WINDOW = 60_000
@@ -66,19 +76,26 @@ export async function onRequestPost(context) {
       return jsonResponse({ success: false, data: null, error: '尝试次数过多，请稍后再试' }, 429)
     }
 
+    // Reserve a rate-limit slot before password check so KV write failures
+    // cannot skip accounting or leak whether the password matched.
+    rateData.count++
+    try {
+      await coshub_kv.put(rateKey, JSON.stringify(rateData))
+    } catch {
+      return jsonResponse({ success: false, data: null, error: '服务暂时不可用，请稍后再试' }, 503)
+    }
+
     const actualPassword = context.env.ACCESS_PASSWORD || ''
 
     if (password !== actualPassword) {
-      rateData.count++
-      try {
-        await coshub_kv.put(rateKey, JSON.stringify(rateData))
-      } catch {}
       return jsonResponse({ success: false, data: null, error: '密码错误' }, 401)
     }
 
     try {
       await coshub_kv.put(rateKey, JSON.stringify({ count: 0, windowStart: Date.now() }))
-    } catch {}
+    } catch {
+      // Auth succeeded; rate reset failure must not block login.
+    }
 
     const token = await signJWT({ authenticated: true }, authSecret, 7 * 24 * 3600)
 

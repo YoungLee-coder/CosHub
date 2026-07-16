@@ -4,10 +4,17 @@ import COS from 'cos-nodejs-sdk-v5'
 const app = express()
 app.use(express.json())
 
+/** COS deleteMultipleObject max Objects per request. */
+const MAX_DELETE_KEYS = 1000
+
+/**
+ * Credentials must come from middleware-injected headers only.
+ * Express lowercases header names; middleware overwrites any client-sent values.
+ */
 function createCosClient(req) {
   const secretId = req.headers['x-coshub-cos-secret-id']
   const secretKey = req.headers['x-coshub-cos-secret-key']
-  if (!secretId || !secretKey) {
+  if (!secretId || !secretKey || typeof secretId !== 'string' || typeof secretKey !== 'string') {
     return null
   }
   return new COS({ SecretId: secretId, SecretKey: secretKey })
@@ -113,6 +120,14 @@ app.delete('/cos/objects', async (req, res) => {
     return errorRes(res, 400, 'Invalid request')
   }
 
+  if (keys.length > MAX_DELETE_KEYS) {
+    return errorRes(res, 400, `最多一次删除 ${MAX_DELETE_KEYS} 个对象`)
+  }
+
+  if (!keys.every((key) => typeof key === 'string' && key.length > 0)) {
+    return errorRes(res, 400, 'Invalid request')
+  }
+
   try {
     const cos = createCosClient(req)
     if (!cos) {
@@ -122,13 +137,10 @@ app.delete('/cos/objects', async (req, res) => {
 
     if (keys.length === 1) {
       await new Promise((resolve, reject) => {
-        cos.deleteObject(
-          { Bucket: bucket, Region: region, Key: keys[0] },
-          (err) => {
-            if (err) reject(err)
-            else resolve()
-          }
-        )
+        cos.deleteObject({ Bucket: bucket, Region: region, Key: keys[0] }, (err) => {
+          if (err) reject(err)
+          else resolve()
+        })
       })
     } else {
       await new Promise((resolve, reject) => {
@@ -182,13 +194,10 @@ app.put('/cos/objects', async (req, res) => {
     })
 
     await new Promise((resolve, reject) => {
-      cos.deleteObject(
-        { Bucket: bucket, Region: region, Key: oldKey },
-        (err) => {
-          if (err) reject(err)
-          else resolve()
-        }
-      )
+      cos.deleteObject({ Bucket: bucket, Region: region, Key: oldKey }, (err) => {
+        if (err) reject(err)
+        else resolve()
+      })
     })
 
     successRes(res, { success: true })
@@ -213,13 +222,10 @@ app.post('/cos/objects', async (req, res) => {
     const key = path.endsWith('/') ? path : `${path}/`
 
     await new Promise((resolve, reject) => {
-      cos.putObject(
-        { Bucket: bucket, Region: region, Key: key, Body: '' },
-        (err) => {
-          if (err) reject(err)
-          else resolve()
-        }
-      )
+      cos.putObject({ Bucket: bucket, Region: region, Key: key, Body: '' }, (err) => {
+        if (err) reject(err)
+        else resolve()
+      })
     })
 
     successRes(res, { success: true })
